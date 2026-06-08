@@ -398,10 +398,11 @@ Consultative appendix at the end — detailed tables and charts per section, no 
 ### 8.1 Generation order
 
 ```
+0. Collect Context Cards per country (see §8.4)
 1. Fetch data per country (monthly snapshots + CSV placeholders)
 2. Compute comparisons (M-1, YoY, Plan, Attainment%, YTD)
 3. Render business sections: Main KPIs → B&C → Acquisition → Company Metrics → Financial → BACK-UP
-4. Generate textual analyses (LLM) per section — Results / Gap & Hypothesis / Moving Forward
+4. Generate textual analyses (LLM) per section — Results / Gap & Hypothesis / Moving Forward (uses Context Cards)
 5. Generate TL;DR (consumes the Results of all sections)
 6. Final document composition
 ```
@@ -410,6 +411,7 @@ Consultative appendix at the end — detailed tables and charts per section, no 
 
 ```
 meta:            country, business_unit, month_label, prior_month_label, prior_year_month_label
+context_cards:   [ ... ]   ← collected in step 0 (see §8.4); empty if nothing happened
 main_kpis:       computed KPIs
 brand_comms:     { macro, pr, social }
 acquisition:     { macro, by_source, by_icp }
@@ -422,9 +424,61 @@ analyses:        { per section: results, gap, moving_forward } + { tldr }  ← L
 
 One document per country and month: `MBR_<COUNTRY>_<MONTH_LABEL>`.
 
+### 8.4 Context collection flow
+
+External context (real-world events) enters the report **only** through Context Cards. The fields and how the LLM *uses* them are defined in `ANALYSIS_RULES.md` §2; this section defines how they are *collected*.
+
+**Mechanism — LLM interview that materializes a versioned file:**
+
+```
+0a. Before generating a country's MBR, the LLM asks, in plain language:
+    "Anything relevant happen in <COUNTRY> this month? Tell me — or say 'nothing'."
+
+0b. The human answers freely (or "nothing").
+
+0c. The LLM structures the answer into Context Cards, mapping affected KPIs to
+    canonical catalog names and inferring `status` from the human's wording
+    ("should have / probably" → expected/hypothesis; "confirmed / it spiked" → confirmed),
+    then echoes them back for confirmation.
+
+0d. On confirmation, the cards are saved to a versioned file:
+    context/<YYYY-MM>_<COUNTRY>.md
+
+0e. The generator reads that file at step 1.
+```
+
+**Degradation (no human present):** in a fully batch run, step 0a-0c is skipped and the generator reads a pre-filled `context/<YYYY-MM>_<COUNTRY>.md`. The **file is the source of truth** in both modes; the interview is only the comfortable way to fill it. If neither interview nor file exists → the LLM operates on internal causality only and speculates nothing (safe default — see `ANALYSIS_RULES.md` §1.3).
+
+**File format** — `context/<YYYY-MM>_<COUNTRY>.md`:
+
+```markdown
+# Context — BR · 2026-04
+
+## Card 1 — Billing incident
+- affected_kpis: New Payments, Trials
+- direction: down
+- magnitude: large
+- status: expected
+- description: Billing incident extended trials to 30 days
+- analyst_take: Likely the month's biggest factor; confirm with Product
+
+## Card 2 — Joel Jota brand campaign
+- affected_kpis: Total Reach (Social), Engagement Rate
+- direction: up
+- magnitude: medium
+- status: confirmed
+- description: Influencer campaign peaked mid-month
+- analyst_take: —
+```
+
+An empty file (no cards) is valid and means "nothing relevant happened" → internal causality only.
+
+*(If a future code-only generator needs strict parsing, swap markdown for YAML — same fields.)*
+
 ---
 
 ## 9. Changelog
 
+- **2026-06-02** — (v2.1) Added **Context collection flow** (§8.4): LLM interview that materializes a versioned `context/<YYYY-MM>_<COUNTRY>.md` file; degrades to pre-filled file in batch mode; empty file = internal causality only. Generation order gains step 0; generator input gains `context_cards`.
 - **2026-06-02** — (v2) Aligned with KPI Catalog v2 and converted to English (machine-consumed, output is EN): `Lifecycle` → **Company Metrics**; **Financial** becomes its own section (§6) with GMV/Orders/Avg Ticket active via DP4; Acquisition restructured into **§4.2 by source** (Level 4 groups, Level 2 rows) + **§4.3 by ICP** (blocked); added **canonical table templates** (T1 Performance vs Budget, T2 MoM, T3 Source breakdown, T4 ICP, T5 Acq×Activation funnel); **monthly snapshot** as data source (§0.9); `country` parameterization (§0.2); **TL;DR activated** (described first, generated last). Removed Python-module status notes (docs-first paradigm).
 - **2026-06-02** — Initial version (PT). Canonical MBR structure with 6 sections and the Charts/Tables/Analysis pattern.
