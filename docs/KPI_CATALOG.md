@@ -346,6 +346,16 @@ Las dimensiones son los campos que **describen** los KPIs (no los miden). Filtro
 - **Uso:** Para KPIs con plan, los special days cambian la ventana de forecast (180d en lugar de 90d).
 - **Ejemplos:** Black Friday, Cyber Monday, Hot Sale (AR), Buen Fin (MX).
 
+### 2.10 `icp` (Ideal Customer Profile)
+
+- **Definición:** Segmento del comerciante según el framework de ICPs (ver §1.2). Usado para abrir KPIs de funnel (Trials, NPs, CVR Trial→NP) por perfil de adquisición.
+- **Valores:** ICP 1 (Platform Migrants), ICP 2 (Social Sellers), ICP 3 (Offline Sellers), ICP 4 (Marketplace Sellers), ICP 5a (D2C Starters), ICP 5b (Affiliates / Dropshippers). Ver §1.2 para definiciones.
+- **Status:** ⚠️ **Fuente de clasificación pendiente** — hoy no existe una columna de tag de ICP por comerciante en ningún DP. La apertura por ICP en los MBRs se construye con una fuente externa (planilla / clasificación manual).
+- **Gotchas:**
+    - Los MBRs históricos (BR, MX) usan la **nomenclatura antigua** (ICP 1-4 + "Fallback"), que **no** coincide 1:1 con el framework nuevo de §1.2. Validar el mapeo antiguo → nuevo antes de comparar series temporales.
+    - El framework nuevo (§1.2) es la referencia canónica; los reportes deben migrar hacia él.
+    - Los segmentos no suman 100% del universo (ver §1.2).
+
 ---
 
 ## 3. Tablas de referencia
@@ -827,6 +837,8 @@ Filtrar siempre por **`mkt_source`** (no `plan_mkt_source_ops`). Los niveles 2-4
 - **Sessions por nivel:** DP2 — sin plan hoy
 - **Trials / NPs / QLs por nivel:** DP1 — con plan
 - **Spend / CAC por nivel:** ⚠️ Bloqueado (DP6)
+
+**Apertura adicional por ICP:** los KPIs de funnel (Trials, NPs, CVR Trial→NP) también se abren por **`icp`** (ver §2.10) en los MBRs — además de por `mkt_source`. ⚠️ La clasificación por ICP depende de una fuente externa (sin tag de ICP en los DPs hoy).
 
 ---
 
@@ -1388,6 +1400,7 @@ ORDER BY 1;
 | B9 | **DP6 — Marketing Expenses & Headcount** | Acquisition · Investment | Aguardar publicación. Desbloquea Spend, CAC. |
 | B10 | **GMV per Seller + % Seller** | Financial · Productivity | Bloqueado hasta DP5 (denominador). Numerador ya disponible vía DP4. |
 | B11 | **Versiones EN y ES del catálogo** | Documento | Después de estabilizar PT, traducir. |
+| B12 | **Fuente de clasificación por ICP** | Acquisition | La dimensión `icp` (§2.10) no tiene tag por comerciante en ningún DP. La apertura por ICP se hace hoy con fuente externa (planilla). Definir fuente canónica y mapear nomenclatura antigua (ICP 1-4 + Fallback) al framework nuevo (§1.2). |
 
 ---
 
@@ -1731,6 +1744,16 @@ Dimensões são os campos que **descrevem** os KPIs (não os medem). Filtros e s
 - **Definição:** Dias com comportamento atípico de demanda. Vêm da tabela manual `ext__marketing__acquisition__key_dates_by_country`.
 - **Uso:** Para KPIs com plan, special days mudam a janela de forecast (180d em vez de 90d).
 - **Exemplos:** Black Friday, Cyber Monday, Hot Sale (AR), Buen Fin (MX).
+
+### 2.10 `icp` (Ideal Customer Profile)
+
+- **Definição:** Segmento do merchant segundo o framework de ICPs (ver §1.2). Usado para abrir KPIs de funnel (Trials, NPs, CVR Trial→NP) por perfil de aquisição.
+- **Valores:** ICP 1 (Platform Migrants), ICP 2 (Social Sellers), ICP 3 (Offline Sellers), ICP 4 (Marketplace Sellers), ICP 5a (D2C Starters), ICP 5b (Affiliates / Dropshippers). Ver §1.2 para definições.
+- **Status:** ⚠️ **Fonte de classificação pendente** — hoje não existe coluna de tag de ICP por merchant em nenhum DP. A abertura por ICP nos MBRs é construída com fonte externa (planilha / classificação manual).
+- **Gotchas:**
+    - Os MBRs históricos (BR, MX) usam a **nomenclatura antiga** (ICP 1-4 + "Fallback"), que **não** corresponde 1:1 ao framework novo de §1.2. Validar o mapeamento antigo → novo antes de comparar séries temporais.
+    - O framework novo (§1.2) é a referência canônica; os relatórios devem migrar para ele.
+    - Os segmentos não somam 100% do universo (ver §1.2).
 
 ---
 
@@ -2244,6 +2267,8 @@ Filtrar sempre por **`mkt_source`** (não `plan_mkt_source_ops`). Os níveis 2-4
 - **Trials / NPs / QLs por nível:** DP1 — com plan
 - **Spend / CAC por nível:** ⚠️ Bloqueado (DP6)
 
+**Abertura adicional por ICP:** os KPIs de funnel (Trials, NPs, CVR Trial→NP) também são abertos por **`icp`** (ver §2.10) nos MBRs — além de por `mkt_source`. ⚠️ A classificação por ICP depende de fonte externa (sem tag de ICP nos DPs hoje).
+
 ---
 
 ## 6. KPIs — Company Metrics 🟡
@@ -2539,11 +2564,13 @@ Itens identificados como pendência de catalogação, definição ou validação
 | B9 | **DP6 — Marketing Expenses & Headcount** | Acquisition · Investment | Aguardar publicação. Desbloqueia Spend, CAC. |
 | B10 | **GMV per Seller + % Seller** | Financial · Productivity | Bloqueado até DP5 (denominador). Numerador já está disponível via DP4. |
 | B11 | **Versões EN e ES do catálogo** | Documento | Após estabilização do conteúdo em PT, traduzir. |
+| B12 | **Fonte de classificação por ICP** | Acquisition | A dimensão `icp` (§2.10) não tem tag por merchant em nenhum DP. A abertura por ICP é feita hoje com fonte externa (planilha). Definir fonte canônica e mapear nomenclatura antiga (ICP 1-4 + Fallback) ao framework novo (§1.2). |
 
 ---
 
 ## 11. Changelog
 
+- **2026-06-02** — (8ª iteração) Auditoria de cobertura cruzando MBRs BR/AR/MX: adicionada dimensão **`icp`** (§2.10) com referência ao framework de §1.2; menção de abertura por ICP em §5.4 (Trials/NPs/CVR Trial→NP); item **B12** no backlog (fonte de classificação ICP pendente — sem tag em DP, nomenclatura antiga ICP 1-4+Fallback a mapear). Aplicado em ambos os idiomas. Demais gaps auditados ficaram fora: GMV by channel (on hold), CRM funnel (fora de escopo), AI Visibility (mantém Manual), estruturas de tabela Acq×Activation/Perf-vs-Budget (vão para DOC_CONSTRUCTION), domínio Lifecycle/PMM (não criado — coberto por NSs/Churn em outros domínios).
 - **2026-06-02** — (7ª iteração) (1) **§6 Lifecycle renomeado para Company Metrics** em ambos os idiomas (heading, domain tags, anchors, glossário, KPI matrix, backlog, cross-references); (2) **KPI Matrix reorganizada**: coluna "Plan?" removida; ordem agora é Company Metrics · Financial · Acquisition · Brand; (3) **Cookbook SQL** unificado na versão ES-AR — versão PT-BR passa a apontar para o link, evitando duplicação de código.
 - **2026-06-02** — (6ª iteração) §1.2 **ICPs reescrita** com o framework canônico de 5 segmentos (Platform Migrants, Social Sellers, Offline Sellers, Marketplace Sellers, D2C Starters, Affiliates/Dropshippers) tiered em Premium / Mid-Premium / SMBs. Aplicado em ambos os idiomas (ES-AR + PT-BR).
 - **2026-06-02** — (5ª iteração) Investigação de GMV: off-platform é <1% do total em todos os países (Mar/26) → recomendação no §7.1 de usar `on_platform` como GMV principal. Adicionado **§10 Backlog** com 11 pendências (finance_segment, plans, sources extras, naming bugs do DP1, SOV AI, DP5/DP6, etc.).
