@@ -1,84 +1,89 @@
-# Doc Construction — MBR SMB
+# Doc Construction — MBR
 
-**Specification canônica de como o relatório MBR é montado.** Define a ordem dos blocos, os artefatos visuais (charts e tabelas) e a estrutura textual de cada seção, para BR / AR / MX.
+**Canonical specification of how the MBR report is assembled.** Defines section order, visual artifacts (charts and tables), recurring table templates, and the textual structure of each block.
 
-- **Escopo:** SMB · BR, AR, MX
-- **Comprimento-alvo:** 1-2 páginas executivas (TL;DR + Main KPIs) + 3-5 páginas de seções de negócio + BACK-UP
-- **Fonte de KPIs:** `KPI_CATALOG.md` (toda referência a um KPI usa o nome canônico do catálogo)
-- **Regras textuais:** `ANALYSIS_RULES.md`
-- **Última atualização:** 2026-06-02
+- **Scope:** SMB · single file parameterized by `country` (BR, AR, MX)
+- **Cadence:** monthly MBR *(QBR out of scope for now)*
+- **KPI source:** `KPI_CATALOG.md` v2 — every KPI reference uses the catalog's canonical name; definitions and formulas live there, not here
+- **Writing rules:** `ANALYSIS_RULES.md` *(to be created)*
+- **Language:** English (machine-consumed; report output is in English)
+- **Last updated:** 2026-06-02
 - **Owner:** Marketing Ops
 
 ---
 
-## 0. Convenções
+## 0. Conventions
 
-### 0.1 Estrutura geral do documento
+### 0.1 Overall document structure
 
 ```
 1. TL;DR
 2. Main KPIs
 3. Brand & Comms
 4. Acquisition
-5. Lifecycle
-6. BACK-UP
+5. Company Metrics
+6. Financial
+7. BACK-UP
 ```
 
-Cada seção de negócio (B&C, Acquisition, Lifecycle) segue o mesmo padrão interno:
+Each business section (B&C, Acquisition, Company Metrics, Financial) follows the same internal 3-block pattern:
 
 ```
-SEÇÃO
-├── Bloco 1 — Charts (2×2 grid)
-├── Bloco 2 — Tables (sumário do período)
-└── Bloco 3 — Análise textual (Results / Gap & Hypothesis / Moving Forward)
+SECTION
+├── Block 1 — Charts (2×2 grid)
+├── Block 2 — Tables (period summary)
+└── Block 3 — Textual analysis (Results / Gap & Hypothesis / Moving Forward)
 ```
 
-### 0.2 Página e tipografia
+### 0.2 Country parameterization
 
-- **Página:** A4, margens 1,5 cm, retrato
-- **Fonte de texto:** Arial (corpo, headings)
-- **Fonte de tabela e chart:** Roboto
-- **Tamanhos:** 16pt título do doc · 13pt seção · 10pt corpo · 9pt células de tabela
+The document is **single**, generated per country via the `country` parameter. All KPIs, filters, and comparisons respect the current country. No structure changes across BR/AR/MX — only the data. Baseline exceptions (e.g., Share of Market) are already handled in the data itself (see catalog §2.1).
 
-Tokens completos em `config/design.py`.
+Base filter for the whole report: `country = <param>` AND `business_unit = 'SMB'`.
 
-### 0.3 Cores (Nuvemshop Insti Styleguide)
+### 0.3 Page and typography
 
-- **Brand:** `#0050C3` (header de tabela, títulos de seção)
+- **Page:** A4, 1.5 cm margins, portrait
+- **Text font:** Arial (body, headings)
+- **Table and chart font:** Roboto
+- **Sizes:** 16pt document title · 13pt section · 10pt body · 9pt table cells
+
+### 0.4 Colors (Nuvemshop Insti Styleguide)
+
+- **Brand:** `#0050C3` (table header, section titles)
 - **Brand Dark:** `#171E43` (headings)
-- **Linhas alternadas:** `#F5FAFF`
-- **Bordas:** `#E7E8E9`
-- **Condicional MoM/YoY:** verde `#0CA76B` (positivo), amarelo `#9A7000` (neutro), vermelho `#CC3333` (negativo)
+- **Alternating rows:** `#F5FAFF`
+- **Borders:** `#E7E8E9`
+- **Conditional MoM/YoY/Attainment:** green `#0CA76B` (positive), amber `#9A7000` (neutral), red `#CC3333` (negative)
 
-### 0.4 Chart specs (padrão)
+### 0.5 Chart specs (default)
 
-| Atributo | Valor |
+| Attribute | Value |
 |---|---|
-| **Janela histórica** | 24 meses terminando no mês de referência |
-| **Tamanho half-width** | 8.1 cm × 7.5 cm (para grid 2×2) |
-| **Tamanho full-width** | 17 cm × 7.5 cm |
+| **Historical window** | 24 months ending in the reference month |
+| **Half-width size** | 8.1 cm × 7.5 cm (for 2×2 grid) |
+| **Full-width size** | 17 cm × 7.5 cm |
 | **DPI** | 150 |
-| **Eixo X** | Labels mensais (`%b '%y`) com ano apenas na primeira ocorrência |
-| **Eixo Y** | Formatação `K`/`M` para grandes números, `%` para ratios |
-| **Mês de referência** | Destacado (cor mais forte, anotação de valor) |
-| **Grid Y** | Linhas sutis cinza `#E7E8E9`, sem grid X |
-| **Spines** | Apenas linha inferior visível |
+| **X axis** | Monthly labels (`%b '%y`) with year only on first occurrence |
+| **Y axis** | `K`/`M` formatting for large numbers, `%` for ratios |
+| **Reference month** | Highlighted (stronger color, value annotation) |
+| **Y grid** | Subtle gray lines `#E7E8E9`, no X grid |
+| **Spines** | Bottom line only |
 
-### 0.5 Table specs (padrão)
+### 0.6 Table specs (default)
 
-| Atributo | Valor |
+| Attribute | Value |
 |---|---|
-| **Header** | Fundo `#0050C3`, texto branco bold |
-| **Linhas alternadas** | Branco / `#F5FAFF` |
-| **Linha "Total"** | Fundo `#F3F3F3` (destaque) |
-| **Borda final** | 1pt cinza separador |
-| **Colunas-padrão** | Metric · Real · M-1 · MoM% · (YoY% ou Plan/Attainment%) |
-| **Padding vertical** | 2pt |
-| **Coloração condicional** | MoM% e YoY% com cor da fonte (verde/amarelo/vermelho) |
+| **Header** | `#0050C3` fill, white bold text |
+| **Alternating rows** | White / `#F5FAFF` |
+| **"Total" row** | `#F3F3F3` fill (highlight, bold) |
+| **Final border** | 1pt gray separator |
+| **Vertical padding** | 2pt |
+| **Conditional coloring** | MoM% / YoY% / Attainment% as font color (green/amber/red) |
 
-### 0.6 Composição de chart grid 2×2
+### 0.7 2×2 chart grid composition
 
-Implementada via tabela Word invisível (2 colunas × N linhas, sem bordas). Cada célula contém uma imagem PNG do matplotlib. Padrão por seção de negócio:
+Grid of 4 charts via an invisible table (2 columns × 2 rows, no borders), each cell holding a PNG image:
 
 ```
 +----------------+----------------+
@@ -88,70 +93,118 @@ Implementada via tabela Word invisível (2 colunas × N linhas, sem bordas). Cad
 +----------------+----------------+
 ```
 
-### 0.7 Comparações temporais
+### 0.8 Temporal comparisons
 
-- **Real:** mês de referência (`MONTH_LABEL`)
-- **M-1:** mês anterior (`PRIOR_MONTH_LABEL`)
-- **YoY:** mesmo mês do ano anterior (`PRIOR_YEAR_MONTH_LABEL`)
-- **Plan / Attainment%:** apenas para KPIs com `expected_monthly_*` (ver catálogo)
-- **YTD:** Jan até mês de referência
-- **Quarter:** trimestre corrente até mês de referência
+- **Real:** reference month
+- **M-1 / MoM%:** prior month and variation
+- **YoY / YoY%:** same month previous year and variation
+- **Plan / Attainment%:** only for KPIs with `expected_monthly_*` (see catalog)
+- **YTD:** Jan through reference month
+- **Forecast:** when the KPI has `forecast_*`
+
+### 0.9 Data source
+
+The MBR runs over **closed months**, therefore it consumes the data products' **monthly snapshots** (`*__agg_snapshot_monthly` — see catalog §0.1 and §3.1) whenever available. For the 24-month historical charts, the daily/snapshot variant is used depending on the KPI. Placeholder KPIs (Company Metrics) use CSV until DP5; GMV uses DP4.
+
+### 0.10 Standard breakdowns (drill-down dimensions)
+
+**By `mkt_source`** (4-level hierarchy — see catalog §3.4):
+- **Level 4 (Branded / Non-Branded)** → subsection grouper in Acquisition
+- **Level 2 (8 sources, incl. Long Tail)** → rows within each group
+
+**By `icp`** (see catalog §2.10) → additional drill-down of funnel KPIs in Acquisition. ⚠️ Depends on external classification source (backlog B12).
+
+**By `country`** → the entire document (global parameter).
+
+---
+
+## Canonical table templates
+
+Recurring tabular structures across the MBRs. Each section references the applicable template instead of redefining columns.
+
+### T1 — Performance vs Budget
+
+The flagship table for any KPI with a plan.
+
+| KPI | Real | Plan | %Achv | YoY | YTD | %Achv YTD | YoY YTD |
+|---|---|---|---|---|---|---|---|
+
+### T2 — Performance Month-over-Month
+
+| KPI | Real | M-1 | MoM% | YoY | YoY% |
+|---|---|---|---|---|---|
+
+### T3 — Breakdown by Source (Acquisition)
+
+Grouped by Level 4 (Branded / Non-Branded), rows in Level 2:
+
+| Source | Trials | NPs | NSs | CVR T→NP | NP Attainment% |
+|---|---|---|---|---|---|
+| **Branded** *(subtotal)* | | | | | |
+| ↳ Performance Brand | | | | | |
+| ↳ Organic | | | | | |
+| ↳ Direct | | | | | |
+| **Non-Branded** *(subtotal)* | | | | | |
+| ↳ Performance No Brand | | | | | |
+| ↳ Affiliates | | | | | |
+| ↳ Partners | | | | | |
+| ↳ Organic Growth | | | | | |
+| ↳ Long Tail | | | | | |
+| **Total** | | | | | |
+
+### T4 — Breakdown by ICP (Acquisition)
+
+| KPI | ICP 1 | ICP 2 | ICP 3 | ICP 4 | ICP 5a | ICP 5b |
+|---|---|---|---|---|---|---|
+| Trials | | | | | | |
+| NPs | | | | | | |
+| CVR Trial→NP | | | | | | |
+
+⚠️ Source-blocked (catalog B12). Include only once ICP classification is available.
+
+### T5 — Acquisition × Activation funnel
+
+End-to-end funnel view in a single row:
+
+| Stage | Branded Searches | → Trials | → NPs | → NSs |
+|---|---|---|---|---|
+| Volume | | | | |
+| CVR (vs prior stage) | — | | | |
 
 ---
 
 ## 1. TL;DR
 
-Seção executiva no topo. Foco em narrativa, sem charts ou tabelas próprias.
+Executive section at the top. Pure narrative, no own charts or tables. **Generated last** in the orchestration (consumes the Results of all business sections), but **positioned first** in the document.
 
-### Estrutura
+### Structure
 
 ```
-1.1 Executive Summary               — síntese de 3-4 frases. "Defining Theme" do mês
-1.2 The Funnel Narrative            — Traffic → Acquisition Quality
-1.3 Base Health & Retention         — Net Adds → Churn breakdown (Seller vs Non-Seller)
-1.4 Business & Financial Impact     — GMV (Local + USD), Transactions, GMV per Seller
-1.5 Critical Discussion Topics      — top 3 bottlenecks que pedem atenção da liderança
-1.6 Prioritized Action Plan         — Immediate Fixes (30 dias) + Strategic Bets (Q+1)
+1.1 Executive Summary          — 3-4 sentence synthesis + month's "Defining Theme"
+1.2 The Funnel Narrative       — Demand/Branded Searches → Acquisition → CVRs
+1.3 Base Health & Retention    — Net Adds → Churn (Seller vs Non-Seller)
+1.4 Business & Financial Impact — GMV (local currency + USD), Orders, GMV per Seller
+1.5 Critical Discussion Topics — top 3 bottlenecks for leadership
+1.6 Prioritized Action Plan    — Immediate Fixes (30d) + Strategic Bets (Q+1)
 ```
 
-### Regras
+### Rules
 
-- Cada subseção: 2-5 frases máximo
-- Todo número citado deve ter "**because**" (regra de causalidade — ver `ANALYSIS_RULES.md`)
-- Terminologia: Phoenix, Branded Levers, ICP 1/2, Seller vs Non-Seller, "softness"/"gap" para misses
-- Idioma: **English**
-- Geração: **Claude API runtime** (recebe Main KPIs + sumários de cada seção de negócio + regras)
-
-### Inputs do gerador
-
-- Outputs estruturados das seções 3, 4, 5 (Results de cada uma)
-- KPIs principais já calculados (Main KPIs)
-- Mês de referência e comparações temporais
-
-> **Status do projeto:** TL;DR é o último módulo a ser construído. Por enquanto, ignorado.
+- Each subsection: 2-5 sentences
+- Mandatory causality (every number with a "because") — see `ANALYSIS_RULES.md`
+- Canonical terminology: Phoenix, Branded/Non-Branded Levers, ICP, Seller vs Non-Seller, "softness"/"gap" for misses
+- Language: English
+- Generation: LLM (receives Main KPIs + each section's Results/Gap/Moving Forward)
 
 ---
 
 ## 2. Main KPIs
 
-Bloco logo após o TL;DR, com a visão consolidada do funil + base.
+Block right after the TL;DR — consolidated view of funnel + base + financials.
 
-### Bloco 2.1 — Tabela "Main KPIs"
+### Block 2.1 — "Main KPIs" table (template T1)
 
-Tabela única horizontal com os indicadores macro.
-
-| Coluna | Conteúdo |
-|---|---|
-| Metric | Nome do KPI (referência ao catálogo) |
-| Real | Valor mês de referência |
-| Plan | `expected_monthly_*` (quando aplicável) |
-| Attainment% | `Real / Plan` |
-| M-1 | Valor mês anterior |
-| MoM% | (Real − M-1) / M-1 |
-| YoY | Mesmo mês ano anterior |
-| YoY% | (Real − YoY) / YoY |
-
-**KPIs incluídos** (na ordem, do topo do funil ao impacto financeiro):
+KPIs in top-of-funnel → financial-impact order:
 
 1. Branded Searches
 2. Sessions
@@ -159,30 +212,25 @@ Tabela única horizontal com os indicadores macro.
 4. CVR Session → Trial
 5. New Payments
 6. CVR Trial → NP
-7. Net Adds 🟡
-8. Merchant Base 🟡
-9. GMV (USD) 🟡
-10. Transactions / Orders 🟡
-11. % Seller ⚠️
-12. GMV per Seller ⚠️
+7. New Sellers
+8. Net Adds 🟡
+9. Merchant Base 🟡
+10. GMV (on-platform, local currency + USD)
+11. Orders
+12. % Seller ⚠️
+13. GMV per Seller ⚠️
 
-🟡 = placeholder · ⚠️ = bloqueado (vide catálogo)
+🟡 = placeholder (CSV until DP5) · ⚠️ = blocked (see catalog)
 
-### Bloco 2.2 — Charts complementares (4 charts, 2×2)
-
-Histórico de 24 meses para os KPIs mais relevantes do funil:
+### Block 2.2 — Complementary charts (2×2)
 
 ```
 +---------------------------+---------------------------+
-| Chart 1 — Trials          | Chart 2 — New Payments    |
-| (bars + plan line)        | (bars + plan line)        |
+| Trials (bars + plan line) | New Payments (bars+plan)  |
 +---------------------------+---------------------------+
-| Chart 3 — Net Adds        | Chart 4 — Merchant Base   |
-| (bars +/- coloridos)      | (line + area fill)        |
+| Net Adds (bars +/-)       | GMV (line + plan)         |
 +---------------------------+---------------------------+
 ```
-
-**Status do projeto:** módulos A (tabela) e B (charts) já implementados, **alinhar com este spec na refatoração final**.
 
 ---
 
@@ -190,79 +238,40 @@ Histórico de 24 meses para os KPIs mais relevantes do funil:
 
 ### 3.1 Macro Results
 
-#### Bloco 3.1.1 — Charts (2×2)
+**Block 3.1.1 — Charts (2×2)**
 
 ```
 +---------------------------+---------------------------+
 | Branded Searches #        | Branded CTR %             |
-| (bars, 24m, ref destacado)| (bars, 24m, ref destacado)|
 +---------------------------+---------------------------+
 | Total Market Search Vol   | Share of Market           |
-| (bars + lines branded/    | (line, real + plan dotted)|
-|  non-branded)             |                           |
+| (bars + branded/non-br.)  | (line, real + plan)       |
 +---------------------------+---------------------------+
 ```
 
-#### Bloco 3.1.2 — Tabela "B&C Macro"
+**Block 3.1.2 — "B&C Macro" table** (template T1; KPIs: Branded Searches, Branded CTR %, Share of Market, Total Market Search Volume)
 
-| Metric | Real | M-1 | MoM% | Plan | Attainment% |
-|---|---|---|---|---|---|
-| Branded Searches # | … | … | … | … | … |
-| Branded CTR % | … | … | … | — | — |
-| Share of Market | … | … | … | … | … |
-| Total Market Search Volume | … | … | … | — | — |
-
-#### Bloco 3.1.3 — Análise (Results / Gap & Hypothesis / Moving Forward)
-
-Texto gerado pela LLM. Ver `ANALYSIS_RULES.md`.
-
-- **Results** — 2-3 frases objetivas. Cada número com seu "because"
-- **Gap & Hypothesis** — onde houve softness/gap e qual a hipótese principal (1-3 bullets)
-- **Moving Forward** — ações concretas para o próximo mês (1-3 bullets)
+**Block 3.1.3 — Analysis** (Results / Gap & Hypothesis / Moving Forward)
 
 ### 3.2 PR
 
-#### Bloco 3.2.1 — Tabela "PR — Publications by Tier"
+**Block 3.2.1 — "PR — Publications by Tier" table**
 
-| Tier | Real | M-1 | MoM% |
-|---|---|---|---|
-| Gold | … | … | … |
-| Tier 1 | … | … | … |
-| Tier 2 | … | … | … |
-| **Total** | … | … | … |
+| Tier | Real | M-1 | MoM% | Plan | Attainment% |
+|---|---|---|---|---|---|
+| Gold · Tier 1 · Tier 2 · **Total** | | | | | |
 
-Linha "Total" em destaque (bold, fundo cinza).
+Complement: Proactive Publications, Total Reach (PR).
 
-#### Bloco 3.2.2 — KPIs adicionais (mini-tabela ou inline)
-
-- Proactive Publications
-- Total Reach (PR)
-- Plan vs Real (Total Publications, Tier 1) com attainment%
-
-#### Bloco 3.2.3 — Análise (Results / Gap & Hypothesis / Moving Forward)
-
-Foco: hit rate da meta, mix Gold/Tier 1/Tier 2, reach, qualidade vs quantidade.
+**Block 3.2.2 — Analysis** (Results / Gap & Hypothesis / Moving Forward)
 
 ### 3.3 Social
 
-#### Bloco 3.3.1 — Tabela "Social — Instagram"
+**Block 3.3.1 — "Social — Instagram" table** (template T2)
 
-| Metric | Real | M-1 | MoM% |
-|---|---|---|---|
-| Total Reach | … | … | … |
-| Organic Reach | … | … | … |
-| Paid Reach | … | … | … |
-| Collab Reach | … | … | … |
-| Net Followers | … | … | … |
-| Profile Followers | … | … | … |
-| Engagement Rate | … | … | … |
-| Interactions | … | … | … |
+Rows: Total Reach, Organic Reach, Paid Reach, Collab Reach, Net Followers, Profile Followers, Engagement Rate, Interactions.
 
-#### Bloco 3.3.2 — Análise (Results / Gap & Hypothesis / Moving Forward)
-
-Foco: mix de reach (orgânico vs pago vs collab), engagement rate vs plano, crescimento de followers.
-
-> **Status do projeto:** módulo C implementado parcialmente. Falta dividir em 3.1 / 3.2 / 3.3 e adotar template Results/Gap/Moving Forward.
+**Block 3.3.2 — Analysis** (Results / Gap & Hypothesis / Moving Forward)
 
 ---
 
@@ -270,217 +279,152 @@ Foco: mix de reach (orgânico vs pago vs collab), engagement rate vs plano, cres
 
 ### 4.1 Macro Results
 
-#### Bloco 4.1.1 — Charts (2×2)
+**Block 4.1.1 — Charts (2×2)**
 
 ```
 +---------------------------+---------------------------+
-| Sessions                  | Trials                    |
-| (bars, 24m)               | (bars + plan line)        |
+| Sessions                  | Trials (bars + plan)      |
 +---------------------------+---------------------------+
-| New Payments              | CVR Trial → NP            |
-| (bars + plan line)        | (line, 24m)               |
+| New Payments (bars+plan)  | CVR Trial → NP (line)     |
 +---------------------------+---------------------------+
 ```
 
-#### Bloco 4.1.2 — Tabela "Acquisition Macro"
+**Block 4.1.2 — "Acquisition Macro" table** (template T1)
 
-| Metric | Real | Plan | Attainment% | M-1 | MoM% | YoY% |
-|---|---|---|---|---|---|---|
-| Sessions | … | — | — | … | … | … |
-| Trials | … | … | … | … | … | … |
-| New Payments | … | … | … | … | … | … |
-| QLs | … | … | … | … | … | … |
-| CVR Session → Trial | … | — | — | … | … | … |
-| CVR Trial → NP | … | — | — | … | … | … |
-| CAC ⚠️ | — | — | — | — | — | — |
+Rows: Sessions, Trials, New Payments, New Sellers, QLs, CVR Session→Trial, CVR Trial→NP. (CAC ⚠️ blocked — DP6.)
 
-#### Bloco 4.1.3 — Análise (Results / Gap & Hypothesis / Moving Forward)
+Optional complement: end-to-end funnel (template T5).
 
-Foco: onde o funil quebrou (topo vs meio vs fundo), qualidade vs quantidade de leads, sazonalidade.
+**Block 4.1.3 — Analysis** (Results / Gap & Hypothesis / Moving Forward)
 
-### 4.2 Brand Levers
+### 4.2 By Source — Branded & Non-Branded (template T3)
 
-**Sources:** Performance Brand, Organic, Direct.
+Single table grouped by Level 4 (Branded / Non-Branded), rows in Level 2 (see §0.10). Group subtotals + grand total.
 
-#### Bloco 4.2.1 — Tabela "Brand Levers — by Source"
+**Optional charts:** stacked bar of NPs by source (24m); line of CVR Trial→NP by group.
 
-Estrutura 2-dimensional (lever × KPI):
+**Analysis** (Results / Gap & Hypothesis / Moving Forward) — focus: which lever drove/held the result, Branded vs Non-Branded mix.
 
-| Lever | Sessions | Trials | NPs | CVR T→NP | NP Attainment% |
-|---|---|---|---|---|---|
-| Performance Brand | … | … | … | … | … |
-| Organic | … | … | … | … | … |
-| Direct | … | … | … | … | … |
-| **Brand Total** | … | … | … | … | … |
+### 4.3 By ICP (template T4)
 
-#### Bloco 4.2.2 — Charts (opcional, 1-2)
-
-- Stacked bar: NPs por lever (24 meses)
-- Line: CVR Trial→NP por lever
-
-#### Bloco 4.2.3 — Análise (Results / Gap & Hypothesis / Moving Forward)
-
-### 4.3 Non-Brand Levers
-
-**Sources:** Performance Non-Branded, Affiliates, Partners, Organic Growth, Others.
-
-#### Bloco 4.3.1 — Tabela "Non-Brand Levers — by Source"
-
-Mesma estrutura da 4.2.1, com as 5 sources Non-Brand + linha total.
-
-#### Bloco 4.3.2 — Charts (opcional, 1-2)
-
-#### Bloco 4.3.3 — Análise (Results / Gap & Hypothesis / Moving Forward)
-
-> **Status do projeto:** seção Acquisition ainda não construída.
+⚠️ **Source-blocked** (catalog B12). Once ICP classification is available: Trials/NPs/CVR table by ICP 1-5b + acquisition-quality analysis by profile.
 
 ---
 
-## 5. Lifecycle 🟡
+## 5. Company Metrics 🟡
 
-Todos os blocos usam **CSV placeholder** até DP5 estar disponível.
+All blocks use **CSV placeholder** until DP5 is available (see catalog §6).
 
 ### 5.1 Merchant Base & Net Adds
 
-#### Bloco 5.1.1 — Charts (2×2)
+**Block 5.1.1 — Charts (2×2)**
 
 ```
 +---------------------------+---------------------------+
-| Merchant Base             | Net Adds                  |
-| (line, 24m, area fill)    | (bars, 24m, +/- colored)  |
+| Merchant Base (line+area) | Net Adds (bars +/-)       |
 +---------------------------+---------------------------+
 | Inflow Components         | Outflow Components        |
-| (stacked: FP + New        | (stacked: Churns +        |
-|  Phoenix + Old Phoenix)   |  Downsell)                |
+| (stacked: FP+New+Old Phx) | (stacked: Churns+Downsell)|
 +---------------------------+---------------------------+
 ```
 
-#### Bloco 5.1.2 — Tabela "Lifecycle Summary"
+**Block 5.1.2 — "Company Metrics Summary" table** (template T2 + YoY)
 
-| Metric | Real | M-1 | MoM% | YoY% |
-|---|---|---|---|---|
-| **Net Adds** | … | … | … | … |
-| First Payments | … | … | … | … |
-| Churn + Downgrade | … | … | … | … |
-| **Merchant Base (EOP)** | … | … | … | … |
+Rows: **Net Adds**, First Payments, Churn + Downgrade, **Merchant Base (EOP)**. (Net Adds and Merchant Base highlighted.)
 
-Linhas "Net Adds" e "Merchant Base" em destaque (bold).
-
-### 5.2 Net Adds Components
-
-Tabela de decomposição do Net Adds em inflow e outflow.
-
-#### Bloco 5.2.1 — Tabela "Net Adds Decomposition"
+### 5.2 Net Adds — Decomposition
 
 | Component | Real | M-1 | MoM% |
 |---|---|---|---|
-| First Payments | … | … | … |
-| New Phoenix | … | … | … |
-| Old Phoenix | … | … | … |
-| **Total Inflow** | … | … | … |
-| Churns | … | … | … |
-| Downsell to Freemium | … | … | … |
-| **Total Outflow** | … | … | … |
-| Ajuste | … | … | … |
-| **Net Adds** | … | … | … |
+| First Payments · New Phoenix · Old Phoenix · **Total Inflow** | | | |
+| Churns · Downsell to Freemium · **Total Outflow** | | | |
+| Ajuste · **Net Adds** | | | |
 
 ### 5.3 Churn Breakdown
 
-#### Bloco 5.3.1 — Tabela "Churn"
+Rows: Churn Rate, Churns (abs), Downsell to Freemium. (Seller vs Non-Seller ⚠️ blocked.)
 
-| Segment | Real | M-1 | MoM% |
-|---|---|---|---|
-| Churn Rate | … | … | … |
-| Churns absolute | … | … | … |
-| Downsell to Freemium | … | … | … |
-| Net Adds Quality (% Seller no NA) ⚠️ | — | — | — |
+### 5.4 Analysis (Results / Gap & Hypothesis / Moving Forward)
 
-### 5.4 Análise (Results / Gap & Hypothesis / Moving Forward)
-
-Foco: balanço inflow vs outflow, where the leak is happening (Seller vs Non-Seller), Phoenix performance, sazonalidade de churn.
-
-> **Status do projeto:** módulo D implementado com CSV placeholder. Estrutura precisa adequação às 4 subseções (5.1 / 5.2 / 5.3 / 5.4) e ao template Results/Gap/Moving Forward.
+Focus: inflow vs outflow balance, where the leak is, Phoenix performance, churn seasonality.
 
 ---
 
-## 6. BACK-UP
+## 6. Financial
 
-Apêndice ao final do documento com tabelas e charts detalhados, organizados por seção de negócio. Não é narrativa — é referência consultiva.
+GMV comes from **DP4** (active — see catalog §7). Breakdowns by channel and by ICP are **on hold** for now.
 
-### Estrutura
+### 6.1 GMV
 
-```
-6.1 B&C Back-up
-    - Tabela detalhada de PR por meio/origem
-    - Tabela detalhada de Social com plan e attainment%
-    - Histórico 24m por KPI (charts adicionais)
+**Block 6.1.1 — Chart** — GMV (on-platform) 24m history, line + plan.
 
-6.2 Acquisition Back-up
-    - Tabela detalhada de Brand Levers com plan, attainment% e CAC (quando disponível)
-    - Tabela detalhada de Non-Brand Levers
-    - Charts complementares por source
+**Block 6.1.2 — "GMV & Orders" table** (template T1)
 
-6.3 Lifecycle Back-up
-    - Tabela detalhada de Net Adds por source (quando DP5 estiver pronto)
-    - Histórico 24m de cada componente do Net Adds
-    - Churn breakdown por segmento (Seller vs Non-Seller — bloqueado)
-```
+| KPI | Real | Plan | %Achv | YoY | YTD |
+|---|---|---|---|---|---|
+| GMV (local currency) | | | | | |
+| GMV (USD) | | | | | |
+| Orders | | | | | |
+| Avg Ticket | | | | | |
+| GMV POS *(where relevant: CL/CO/MX)* | | | | | |
 
-### Regras
+Notes: use `on_platform` as the primary GMV (off-platform <1% — catalog §7.1); do not add POS to on-platform (POS is a subset).
 
-- Sem texto analítico (já está nas seções principais)
-- Pode usar tabelas full-width
-- Charts podem ser full-width (não precisa do grid 2×2)
+**Block 6.1.3 — Analysis** (Results / Gap & Hypothesis / Moving Forward)
 
-> **Status do projeto:** ainda não construído.
+### 6.2 Productivity ⚠️
+
+% Seller and GMV per Seller — **blocked** until DP5. Include when available.
 
 ---
 
-## 7. Convenções de orquestração
+## 7. BACK-UP
 
-### 7.1 Ordem de geração
-
-A geração do documento segue a ordem:
+Consultative appendix at the end — detailed tables and charts per section, no narrative.
 
 ```
-1. Fetch de dados (fetcher genérico baseado no catálogo)
-2. Cálculo de comparações temporais (M-1, YoY, Plan, Attainment%)
-3. Renderização: Main KPIs → B&C → Acquisition → Lifecycle → BACK-UP
-4. Geração de análises textuais (Claude API) por seção
-5. Geração do TL;DR (recebe outputs das seções)
-6. Composição final do .docx
+7.1 B&C Back-up         — PR by outlet/origin; Social with plan/attainment; extra 24m charts
+7.2 Acquisition Back-up — full source breakdown (Level 1, 16 sources); charts by source
+7.3 Company Metrics Back-up — Net Adds components 24m; churn by segment (once DP5)
+7.4 Financial Back-up   — GMV by currency (LC/USD/Finance USD); Avg Ticket by channel
 ```
 
-### 7.2 Entrada do gerador
-
-```python
-data = {
-    "meta": {
-        "month_label": "2026-03",
-        "country": "BR",
-        "business_unit": "SMB",
-        "prior_month_label": "2026-02",
-        "prior_year_month_label": "2025-03",
-    },
-    "main_kpis": { ... },         # KPIs calculados
-    "brand_comms": { ... },       # estruturado por subseção
-    "acquisition": { ... },
-    "lifecycle": { ... },
-    "analyses": {                 # gerado pela LLM
-        "brand_comms": { results, gap, moving_forward },
-        "acquisition": { ... },
-        "lifecycle": { ... },
-        "tldr": { ... },
-    },
-}
-```
-
-### 7.3 Saída
-
-Arquivo `.docx` em `output/MBR_<COUNTRY>_<MONTH_LABEL>.docx`.
+**Rules:** no analytical text; tables and charts may be full-width (no 2×2 grid).
 
 ---
 
-## 8. Changelog
+## 8. Orchestration conventions
 
-- **2026-06-02** — Versão inicial. Define a estrutura canônica do MBR com 6 seções e o padrão Charts/Tables/Analysis para cada seção de negócio. Padrão Results/Gap/Moving Forward unificado.
+### 8.1 Generation order
+
+```
+1. Fetch data per country (monthly snapshots + CSV placeholders)
+2. Compute comparisons (M-1, YoY, Plan, Attainment%, YTD)
+3. Render business sections: Main KPIs → B&C → Acquisition → Company Metrics → Financial → BACK-UP
+4. Generate textual analyses (LLM) per section — Results / Gap & Hypothesis / Moving Forward
+5. Generate TL;DR (consumes the Results of all sections)
+6. Final document composition
+```
+
+### 8.2 Generator input
+
+```
+meta:            country, business_unit, month_label, prior_month_label, prior_year_month_label
+main_kpis:       computed KPIs
+brand_comms:     { macro, pr, social }
+acquisition:     { macro, by_source, by_icp }
+company_metrics: { base, net_adds_components, churn }
+financial:       { gmv }
+analyses:        { per section: results, gap, moving_forward } + { tldr }  ← LLM
+```
+
+### 8.3 Output
+
+One document per country and month: `MBR_<COUNTRY>_<MONTH_LABEL>`.
+
+---
+
+## 9. Changelog
+
+- **2026-06-02** — (v2) Aligned with KPI Catalog v2 and converted to English (machine-consumed, output is EN): `Lifecycle` → **Company Metrics**; **Financial** becomes its own section (§6) with GMV/Orders/Avg Ticket active via DP4; Acquisition restructured into **§4.2 by source** (Level 4 groups, Level 2 rows) + **§4.3 by ICP** (blocked); added **canonical table templates** (T1 Performance vs Budget, T2 MoM, T3 Source breakdown, T4 ICP, T5 Acq×Activation funnel); **monthly snapshot** as data source (§0.9); `country` parameterization (§0.2); **TL;DR activated** (described first, generated last). Removed Python-module status notes (docs-first paradigm).
+- **2026-06-02** — Initial version (PT). Canonical MBR structure with 6 sections and the Charts/Tables/Analysis pattern.
