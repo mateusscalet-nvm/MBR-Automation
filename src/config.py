@@ -70,20 +70,31 @@ BC_GOALS_TABLE  = f"{_P}.s__brand_and_comms__goals__event"
 # ---------------------------------------------------------------------------
 # mkt_source hierarchy (KPI_CATALOG.md §3.4)
 # ---------------------------------------------------------------------------
-LOW_VOLUME_SOURCES = [
+# Sources collapsed into "Misc Sources" at Level 2 (Nurturing is NOT here — it is its own L2)
+MISC_SOURCES = [
     "Brand & Comms", "Eea", "Enp", "Mandae", "Mid-market",
-    "Nurturing", "Others", "Product Marketing", "Store Referral",
+    "Others", "Product Marketing", "Store Referral",
 ]
-# Level 2 core sources (everything else maps to itself; low-volume collapses)
+# Level 2 core sources (kept as-is, incl. Nurturing)
 LEVEL2_CORE = [
     "Performance Brand", "Organic", "Direct",
-    "Performance No Brand", "Affiliates", "Partners", "Organic Growth",
+    "Performance No Brand", "Affiliates", "Partners", "Organic Growth", "Nurturing",
 ]
+# Level 3: acquisition mechanics
+PERFORMANCE_SOURCES = ["Performance Brand", "Performance No Brand"]
+ORGANIC_SOURCES     = ["Direct", "Organic", "Organic Growth", "Nurturing"]
+INDIRECT_SOURCES    = ["Affiliates", "Partners"]
 # Level 4: Branded vs Non-Branded
 BRANDED_SOURCES = ["Direct", "Organic", "Performance Brand"]
 
 def level2(mkt_source: str) -> str:
-    return "Low Volume" if mkt_source in LOW_VOLUME_SOURCES else mkt_source
+    return "Misc Sources" if mkt_source in MISC_SOURCES else mkt_source
+
+def level3(mkt_source: str) -> str:
+    if mkt_source in PERFORMANCE_SOURCES: return "Performance"
+    if mkt_source in ORGANIC_SOURCES:     return "Organic"
+    if mkt_source in INDIRECT_SOURCES:    return "Indirect"
+    return "Misc Sources"
 
 def level4(mkt_source: str) -> str:
     return "Branded" if mkt_source in BRANDED_SOURCES else "Non-Branded"

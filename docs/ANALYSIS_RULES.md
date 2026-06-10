@@ -145,7 +145,7 @@ Generated **last** (consumes every section's Results). 5 subsections (see `DOC_C
 ## 7. Terminology & numerical formatting
 
 ### 7.1 Terminology
-Use the canonical terms from `KPI_CATALOG.md` §1: Phoenix (New/Old), Branded / Non-Branded Levers, ICP, Seller vs Non-Seller, Net Adds, mean-click, Low Volume. Never invent synonyms. Use the catalog's canonical KPI names verbatim.
+Use the canonical terms from `KPI_CATALOG.md` §1: Phoenix (New/Old), Branded / Non-Branded Levers, ICP, Seller vs Non-Seller, Net Adds, mean-click, Misc Sources. Never invent synonyms. Use the catalog's canonical KPI names verbatim.
 
 ### 7.2 Numbers
 - Large numbers: `K` / `M` (e.g., 12.4K, 1.3M).
