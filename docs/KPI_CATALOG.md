@@ -200,8 +200,8 @@ SUM(effective_avg_pageviews * effective_total_sessions)
 | **Phoenix (Old)** | Comerciantes que volvieron a la base luego de haber churned hace más tiempo (long-tail de reactivación) |
 | **Net Adds** | Saldo neto en la base del período: inflow (nuevos + reactivaciones) − outflow (churn + downsell) + ajuste contable |
 | **Branded Levers** | Sources de adquisición que operan sobre marca ya reconocida (Nivel 4 — Branded): Direct, Organic, Performance Brand. Ver §3.4 |
-| **Non-Brand Levers** | Sources que construyen demanda nueva (Nivel 4 — Non-Branded): Performance No Brand, Organic Growth, Affiliates, Partners, Long Tail. Ver §3.4 |
-| **Long Tail** | Agregación de sources individualmente poco significativas (Nivel 2): Brand & Comms, Eea, Enp, Mandae, Mid-market, Nurturing, Others, Product Marketing, Store Referral. Ver §3.4 |
+| **Non-Brand Levers** | Sources que construyen demanda nueva (Nivel 4 — Non-Branded): Performance No Brand, Organic Growth, Affiliates, Partners, Low Volume. Ver §3.4 |
+| **Low Volume** | Agregación de sources individualmente poco significativas (Nivel 2): Brand & Comms, Eea, Enp, Mandae, Mid-market, Nurturing, Others, Product Marketing, Store Referral. Ver §3.4 |
 | **Performance (Nivel 3)** | Mecánica de adquisición con medios pagos atribuibles: Performance Brand + Performance No Brand |
 | **Organic (Nivel 3)** | Mecánica de adquisición sin medios pagos directos: Direct, Organic, Organic Growth |
 | **Indirect (Nivel 3)** | Mecánica de adquisición vía terceros: Affiliates, Partners |
@@ -301,7 +301,7 @@ Las dimensiones son los campos que **describen** los KPIs (no los miden). Filtro
 
 `Affiliates`, `Brand & Comms`, `Direct`, `Eea`, `Enp`, `Mandae`, `Mid-market`, `Nurturing`, `Organic`, `Organic Growth`, `Others`, `Partners`, `Performance Brand`, `Performance No Brand`, `Product Marketing`, `Store Referral`
 
-→ Para la jerarquía de agrupamiento (Long Tail · Performance/Organic/Indirect · Branded/Non-Branded), ver **§3.4 Jerarquía de mkt_source**.
+→ Para la jerarquía de agrupamiento (Low Volume · Performance/Organic/Indirect · Branded/Non-Branded), ver **§3.4 Jerarquía de mkt_source**.
 
 - **Gotchas:**
     - **Siempre usar `mkt_source`** para breakdowns y agrupamientos — no `plan_mkt_source_ops`
@@ -400,8 +400,8 @@ Todas están bajo `data_products_prd.data_marketing`.
 La columna canónica es **`mkt_source`** (no `plan_mkt_source_ops` — ver §2.3 y §2.4). Los 16 valores raw se agrupan en 3 niveles adicionales para análisis de breakdown — cada nivel ofrece una "lente" diferente:
 
 - **Nivel 1** — `mkt_source` (16 valores raw, provenientes de la atribución)
-- **Nivel 2** — consolidación: las 9 sources de bajo volumen individual se agrupan en **Long Tail**, resultando en **8** valores
-- **Nivel 3** — agrupamiento por **mecánica de adquisición** (4 valores): Performance · Organic · Indirect · Long Tail
+- **Nivel 2** — consolidación: las 9 sources de bajo volumen individual se agrupan en **Low Volume**, resultando en **8** valores
+- **Nivel 3** — agrupamiento por **mecánica de adquisición** (4 valores): Performance · Organic · Indirect · Low Volume
 - **Nivel 4** — agrupamiento por **relación con la marca** (2 valores): Branded · Non-Branded
 
 | Nivel 1 (mkt_source — 16) | Nivel 2 (8) | Nivel 3 (4) | Nivel 4 (2) |
@@ -413,15 +413,15 @@ La columna canónica es **`mkt_source`** (no `plan_mkt_source_ops` — ver §2.3
 | Organic Growth | Organic Growth | Organic | Non-Branded |
 | Affiliates | Affiliates | Indirect | Non-Branded |
 | Partners | Partners | Indirect | Non-Branded |
-| Brand & Comms | Long Tail | Long Tail | Non-Branded |
-| Eea | Long Tail | Long Tail | Non-Branded |
-| Enp | Long Tail | Long Tail | Non-Branded |
-| Mandae | Long Tail | Long Tail | Non-Branded |
-| Mid-market | Long Tail | Long Tail | Non-Branded |
-| Nurturing | Long Tail | Long Tail | Non-Branded |
-| Others | Long Tail | Long Tail | Non-Branded |
-| Product Marketing | Long Tail | Long Tail | Non-Branded |
-| Store Referral | Long Tail | Long Tail | Non-Branded |
+| Brand & Comms | Low Volume | Low Volume | Non-Branded |
+| Eea | Low Volume | Low Volume | Non-Branded |
+| Enp | Low Volume | Low Volume | Non-Branded |
+| Mandae | Low Volume | Low Volume | Non-Branded |
+| Mid-market | Low Volume | Low Volume | Non-Branded |
+| Nurturing | Low Volume | Low Volume | Non-Branded |
+| Others | Low Volume | Low Volume | Non-Branded |
+| Product Marketing | Low Volume | Low Volume | Non-Branded |
+| Store Referral | Low Volume | Low Volume | Non-Branded |
 
 **Cuándo usar cada nivel:**
 
@@ -433,7 +433,7 @@ La columna canónica es **`mkt_source`** (no `plan_mkt_source_ops` — ver §2.3
 | 4 | Storytelling ejecutivo — narrativa de Branded Levers vs Non-Branded Levers |
 
 **Notas:**
-- "Others" en el Nivel 1 no se descarta — pasa a formar parte del **Long Tail** en el Nivel 2
+- "Others" en el Nivel 1 no se descarta — pasa a formar parte del **Low Volume** en el Nivel 2
 - El Nivel 2 debe ser el estándar para tablas y charts de reportes — combina legibilidad y cobertura
 - Direct se clasifica como Organic en el Nivel 3 (no hay gasto pago) pero Branded en el Nivel 4 (el usuario busca la marca)
 
@@ -828,8 +828,8 @@ La columna canónica es **`mkt_source`** (no `plan_mkt_source_ops` — ver §2.3
 Los KPIs de funnel (Sessions, Trials, NPs, New Sellers, QLs, CVRs) pueden abrirse en cualquiera de los 4 niveles de `mkt_source` definidos en **§3.4**:
 
 - **Nivel 1** (16 sources raw) — análisis operacionales granulares
-- **Nivel 2** (8 sources, con Long Tail) — estándar para tablas/charts de reportes
-- **Nivel 3** (4 categorías — Performance · Organic · Indirect · Long Tail) — mecánica de adquisición
+- **Nivel 2** (8 sources, con Low Volume) — estándar para tablas/charts de reportes
+- **Nivel 3** (4 categorías — Performance · Organic · Indirect · Low Volume) — mecánica de adquisición
 - **Nivel 4** (Branded · Non-Branded) — narrativa ejecutiva
 
 Filtrar siempre por **`mkt_source`** (no `plan_mkt_source_ops`). Los niveles 2-4 son derivados vía CASE/mapping en el SELECT — ver snippet en §9.4.
@@ -1082,7 +1082,7 @@ Errores comunes a evitar — extraídos de las gotchas de los schemas. En cada f
 | Cross-DP (DP1 + DP2) sin alinear filtros | Garantizar `country`, `business_unit`, `mkt_source`, `full_date` consistentes | Poblaciones desalineadas → ratio falso |
 | `GROUP BY plan_mkt_source_ops` para breakdown por lever | `GROUP BY mkt_source` | `plan_mkt_source_ops` es NULL para attribution-only. `mkt_source` es canónica |
 | Mezclar niveles de la jerarquía de `mkt_source` en el mismo chart | Elegir **un único nivel** (1, 2, 3 o 4) y mantener consistencia | Double-count y confusión de granularidades |
-| Tratar "Long Tail" como "Others" en el Nivel 1 | Long Tail solo existe a partir del Nivel 2 | Conceptos distintos |
+| Tratar "Low Volume" como "Others" en el Nivel 1 | Low Volume solo existe a partir del Nivel 2 | Conceptos distintos |
 | `SUM(effective_gmv_on_platform) + SUM(effective_gmv_pos)` para "GMV total" | Usar `effective_gmv_total` o `effective_gmv_on_platform − effective_gmv_pos` | POS es subset de on_platform — sumar es double-count |
 | `AVG(effective_avg_ticket_total_lc)` | `SUM(effective_gmv_total_lc) / SUM(effective_orders_total)` | Avg ticket es ratio — recalcular por componentes |
 | Usar daily DP para análisis de mes cerrado | Usar el snapshot mensual (`*__agg_snapshot_monthly`) | Snapshot ya está agregado, congelado y refleja el estado de cierre |
@@ -1224,11 +1224,11 @@ ORDER BY nps DESC;
 WITH mapped AS (
   SELECT
     mkt_source AS source_l1,
-    -- Nivel 2: Long Tail consolida sources poco significativas
+    -- Nivel 2: Low Volume consolida sources poco significativas
     CASE
       WHEN mkt_source IN ('Brand & Comms','Eea','Enp','Mandae','Mid-market',
                           'Nurturing','Others','Product Marketing','Store Referral')
-        THEN 'Long Tail'
+        THEN 'Low Volume'
       ELSE mkt_source
     END AS source_l2,
     -- Nivel 3: mecánica de adquisición
@@ -1236,7 +1236,7 @@ WITH mapped AS (
       WHEN mkt_source IN ('Performance Brand','Performance No Brand')      THEN 'Performance'
       WHEN mkt_source IN ('Direct','Organic','Organic Growth')              THEN 'Organic'
       WHEN mkt_source IN ('Affiliates','Partners')                          THEN 'Indirect'
-      ELSE 'Long Tail'
+      ELSE 'Low Volume'
     END AS source_l3,
     -- Nivel 4: relación con la marca
     CASE
@@ -1391,7 +1391,7 @@ ORDER BY 1;
 |---|---|---|---|
 | B1 | **`finance_segment` (DP4)** | Financial | DP4 abre GMV en 7 buckets de finance segment (FP&A). Por ahora **no usamos este breakdown** en el MBR — sumamos todos los segments. Cuando FP&A consolide los 7 buckets, retomar. |
 | B2 | **Plans para GMV total / off-platform** | Financial | DP4 tiene plan solo para `on_platform_without_pos` y `pos`. Verificar con Ops cómo presentar "GMV vs Plan" en el MBR. |
-| B3 | **Sources extras de `mkt_source`** | Acquisition | 8 sources caen hoy en "Long Tail". Validar con Ops si alguna merece subir al Nivel 2. |
+| B3 | **Sources extras de `mkt_source`** | Acquisition | 8 sources caen hoy en "Low Volume". Validar con Ops si alguna merece subir al Nivel 2. |
 | B4 | **`forecast_new_sellers` en DP1** | Acquisition | Columna `forecast_new_sellers` no existe en DP1. Reportar al equipo de Data. |
 | B5 | **Inconsistencia de naming en DP1** | Acquisition | `effective_new_payments` × `forecast_payments` (sin "new"). Reportar al equipo de Data. |
 | B6 | **Goals B&C (Branded Searches + Market Share)** | Brand | Validar con Beto si el archivo de Goals B&C debe usarse, o si la fuente canónica es el snapshot DP3. |
@@ -1599,8 +1599,8 @@ SUM(effective_avg_pageviews * effective_total_sessions)
 | **Phoenix (Old)** | Merchants que voltaram à base após churned há mais tempo (long-tail de reativação) |
 | **Net Adds** | Saldo líquido na base do período: inflow (novos + reativações) − outflow (churn + downsell) + ajuste contábil |
 | **Branded Levers** | Sources de aquisição que operam sobre marca já reconhecida (Nível 4 — Branded): Direct, Organic, Performance Brand. Ver §3.4 |
-| **Non-Brand Levers** | Sources que constroem demanda nova (Nível 4 — Non-Branded): Performance No Brand, Organic Growth, Affiliates, Partners, Long Tail. Ver §3.4 |
-| **Long Tail** | Agregação de sources individualmente pouco significativas (Nível 2): Brand & Comms, Eea, Enp, Mandae, Mid-market, Nurturing, Others, Product Marketing, Store Referral. Ver §3.4 |
+| **Non-Brand Levers** | Sources que constroem demanda nova (Nível 4 — Non-Branded): Performance No Brand, Organic Growth, Affiliates, Partners, Low Volume. Ver §3.4 |
+| **Low Volume** | Agregação de sources individualmente pouco significativas (Nível 2): Brand & Comms, Eea, Enp, Mandae, Mid-market, Nurturing, Others, Product Marketing, Store Referral. Ver §3.4 |
 | **Performance (Nível 3)** | Mecânica de aquisição com mídia paga atribuível: Performance Brand + Performance No Brand |
 | **Organic (Nível 3)** | Mecânica de aquisição sem mídia paga direta: Direct, Organic, Organic Growth |
 | **Indirect (Nível 3)** | Mecânica de aquisição via terceiros: Affiliates, Partners |
@@ -1700,7 +1700,7 @@ Dimensões são os campos que **descrevem** os KPIs (não os medem). Filtros e s
 
 `Affiliates`, `Brand & Comms`, `Direct`, `Eea`, `Enp`, `Mandae`, `Mid-market`, `Nurturing`, `Organic`, `Organic Growth`, `Others`, `Partners`, `Performance Brand`, `Performance No Brand`, `Product Marketing`, `Store Referral`
 
-→ Para a hierarquia de agrupamento (Long Tail · Performance/Organic/Indirect · Branded/Non-Branded), ver **§3.4 Hierarquia de mkt_source**.
+→ Para a hierarquia de agrupamento (Low Volume · Performance/Organic/Indirect · Branded/Non-Branded), ver **§3.4 Hierarquia de mkt_source**.
 
 - **Gotchas:**
     - **Sempre usar `mkt_source`** para breakdowns e agrupamentos — não `plan_mkt_source_ops`
@@ -1799,8 +1799,8 @@ Todas estão sob `data_products_prd.data_marketing`.
 A coluna canônica é **`mkt_source`** (não `plan_mkt_source_ops` — ver §2.3 e §2.4). Os 16 valores raw são agrupados em 3 níveis adicionais para análises de breakdown — cada nível oferece uma "lente" diferente:
 
 - **Nível 1** — `mkt_source` (16 valores raw, vindos da atribuição)
-- **Nível 2** — consolidação: as 9 sources de baixo volume individual são agrupadas em **Long Tail**, resultando em **8** valores
-- **Nível 3** — agrupamento por **mecânica de aquisição** (4 valores): Performance · Organic · Indirect · Long Tail
+- **Nível 2** — consolidação: as 9 sources de baixo volume individual são agrupadas em **Low Volume**, resultando em **8** valores
+- **Nível 3** — agrupamento por **mecânica de aquisição** (4 valores): Performance · Organic · Indirect · Low Volume
 - **Nível 4** — agrupamento por **relação com a marca** (2 valores): Branded · Non-Branded
 
 | Nível 1 (mkt_source — 16) | Nível 2 (8) | Nível 3 (4) | Nível 4 (2) |
@@ -1812,15 +1812,15 @@ A coluna canônica é **`mkt_source`** (não `plan_mkt_source_ops` — ver §2.3
 | Organic Growth | Organic Growth | Organic | Non-Branded |
 | Affiliates | Affiliates | Indirect | Non-Branded |
 | Partners | Partners | Indirect | Non-Branded |
-| Brand & Comms | Long Tail | Long Tail | Non-Branded |
-| Eea | Long Tail | Long Tail | Non-Branded |
-| Enp | Long Tail | Long Tail | Non-Branded |
-| Mandae | Long Tail | Long Tail | Non-Branded |
-| Mid-market | Long Tail | Long Tail | Non-Branded |
-| Nurturing | Long Tail | Long Tail | Non-Branded |
-| Others | Long Tail | Long Tail | Non-Branded |
-| Product Marketing | Long Tail | Long Tail | Non-Branded |
-| Store Referral | Long Tail | Long Tail | Non-Branded |
+| Brand & Comms | Low Volume | Low Volume | Non-Branded |
+| Eea | Low Volume | Low Volume | Non-Branded |
+| Enp | Low Volume | Low Volume | Non-Branded |
+| Mandae | Low Volume | Low Volume | Non-Branded |
+| Mid-market | Low Volume | Low Volume | Non-Branded |
+| Nurturing | Low Volume | Low Volume | Non-Branded |
+| Others | Low Volume | Low Volume | Non-Branded |
+| Product Marketing | Low Volume | Low Volume | Non-Branded |
+| Store Referral | Low Volume | Low Volume | Non-Branded |
 
 **Quando usar cada nível:**
 
@@ -1832,7 +1832,7 @@ A coluna canônica é **`mkt_source`** (não `plan_mkt_source_ops` — ver §2.3
 | 4 | Storytelling executivo — narrativa de Branded Levers vs Non-Branded Levers |
 
 **Notas:**
-- "Others" no Nível 1 não é descartada — vira parte do **Long Tail** no Nível 2
+- "Others" no Nível 1 não é descartada — vira parte do **Low Volume** no Nível 2
 - O Nível 2 deve ser o padrão para tabelas e charts de relatórios — combina legibilidade e cobertura
 - Direct é classificada como Organic no Nível 3 (não há gasto pago) mas Branded no Nível 4 (usuário busca a marca)
 
@@ -2257,8 +2257,8 @@ A coluna canônica é **`mkt_source`** (não `plan_mkt_source_ops` — ver §2.3
 Os KPIs de funnel (Sessions, Trials, NPs, New Sellers, QLs, CVRs) podem ser abertos em qualquer um dos 4 níveis de `mkt_source` definidos em **§3.4**:
 
 - **Nível 1** (16 sources raw) — análises operacionais granulares
-- **Nível 2** (8 sources, com Long Tail) — padrão para tabelas/charts de relatórios
-- **Nível 3** (4 categorias — Performance · Organic · Indirect · Long Tail) — mecânica de aquisição
+- **Nível 2** (8 sources, com Low Volume) — padrão para tabelas/charts de relatórios
+- **Nível 3** (4 categorias — Performance · Organic · Indirect · Low Volume) — mecânica de aquisição
 - **Nível 4** (Branded · Non-Branded) — narrativa executiva
 
 Filtrar sempre por **`mkt_source`** (não `plan_mkt_source_ops`). Os níveis 2-4 são derivados via CASE/mapping no SELECT — ver snippet em §9.4.
@@ -2520,7 +2520,7 @@ Erros comuns a evitar — extraídos das gotchas dos schemas. Em cada linha: ❌
 | Cross-DP (DP1 + DP2) sem alinhar filtros | Garantir `country`, `business_unit`, `mkt_source`, `full_date` consistentes nos dois lados | Populações ficam desalinhadas e o ratio fica falso |
 | `GROUP BY plan_mkt_source_ops` para breakdown por lever | `GROUP BY mkt_source` | `plan_mkt_source_ops` é NULL para attribution-only (ex: Mandae some do breakdown). `mkt_source` é canônica |
 | Misturar níveis da hierarquia de `mkt_source` no mesmo chart (ex: `Performance Brand` lado a lado com `Performance`) | Escolher **um único nível** (1, 2, 3 ou 4 — ver §3.4) e manter o agrupamento consistente | Soma fica double-count e o leitor confunde granularidades |
-| Tratar "Long Tail" como "Others" no Nível 1 | Long Tail só existe a partir do Nível 2 — é a consolidação de 9 sources, incluindo a própria `Others` | Conceitos distintos: `Others` (Nível 1) é uma source raw; `Long Tail` (Nível 2+) é um bucket de consolidação |
+| Tratar "Low Volume" como "Others" no Nível 1 | Low Volume só existe a partir do Nível 2 — é a consolidação de 9 sources, incluindo a própria `Others` | Conceitos distintos: `Others` (Nível 1) é uma source raw; `Low Volume` (Nível 2+) é um bucket de consolidação |
 | `SUM(effective_gmv_on_platform) + SUM(effective_gmv_pos)` para "GMV total" | Usar `effective_gmv_total` (= on + off) ou `effective_gmv_on_platform − effective_gmv_pos` se quiser on sem POS | POS é **subset** de on_platform — somar é double-count |
 | `AVG(effective_avg_ticket_total_lc)` | `SUM(effective_gmv_total_lc) / SUM(effective_orders_total)` | Avg ticket é ratio — recalcular pelos componentes |
 | Usar daily DP para análise de mês fechado | Usar o snapshot mensal (`*__agg_snapshot_monthly`) | Snapshot já está agregado, congelado e tem o estado-de-verdade do mês de fechamento |
@@ -2555,7 +2555,7 @@ Itens identificados como pendência de catalogação, definição ou validação
 |---|---|---|---|
 | B1 | **`finance_segment` (DP4)** | Financial | DP4 abre GMV em 7 buckets de finance segment (FP&A). Por enquanto **não usamos esse breakdown** no MBR — somamos todos os segments. Quando o time de FP&A consolidar a definição dos 7 buckets, retomar para detalhar a documentação e considerar inclusão em deepdives. |
 | B2 | **Plans para GMV total / off-platform** | Financial | DP4 tem plan apenas para `on_platform_without_pos` e `pos`. Não há plan para `total` nem `off_platform`. Verificar com Ops como apresentar "GMV vs Plan" no MBR. |
-| B3 | **Sources extras de `mkt_source`** | Acquisition | 8 sources (`Brand & Comms`, `Eea`, `Enp`, `Mandae`, `Mid-market`, `Nurturing`, `Product Marketing`, `Store Referral`) caem hoje em "Long Tail". Validar com Ops se algumas merecem subir para o Nível 2 (ex: Nurturing pode ser relevante como source própria). |
+| B3 | **Sources extras de `mkt_source`** | Acquisition | 8 sources (`Brand & Comms`, `Eea`, `Enp`, `Mandae`, `Mid-market`, `Nurturing`, `Product Marketing`, `Store Referral`) caem hoje em "Low Volume". Validar com Ops se algumas merecem subir para o Nível 2 (ex: Nurturing pode ser relevante como source própria). |
 | B4 | **`forecast_new_sellers` em DP1** | Acquisition | Coluna `forecast_new_sellers` não existe no DP1 (todas outras têm). Reportar ao time de Data. |
 | B5 | **Inconsistência de naming no DP1** | Acquisition | `effective_new_payments` × `forecast_payments` (sem o "new"). Reportar ao time de Data. |
 | B6 | **Goals B&C (Branded Searches + Market Share)** | Brand | Validar com Beto se o arquivo de Goals B&C deve ser usado para Branded Searches/Market Share, ou se a fonte canônica é o snapshot DP3. Atualmente o catálogo usa DP3. |
@@ -2570,11 +2570,12 @@ Itens identificados como pendência de catalogação, definição ou validação
 
 ## 11. Changelog
 
+- **2026-06-09** — (9ª iteração) Renomeado o bucket **`Long Tail` → `Low Volume`** em todo o projeto (catálogo ES-AR + PT-BR, DOC_CONSTRUCTION, ANALYSIS_RULES, código `config.py`).
 - **2026-06-02** — (8ª iteração) Auditoria de cobertura cruzando MBRs BR/AR/MX: adicionada dimensão **`icp`** (§2.10) com referência ao framework de §1.2; menção de abertura por ICP em §5.4 (Trials/NPs/CVR Trial→NP); item **B12** no backlog (fonte de classificação ICP pendente — sem tag em DP, nomenclatura antiga ICP 1-4+Fallback a mapear). Aplicado em ambos os idiomas. Demais gaps auditados ficaram fora: GMV by channel (on hold), CRM funnel (fora de escopo), AI Visibility (mantém Manual), estruturas de tabela Acq×Activation/Perf-vs-Budget (vão para DOC_CONSTRUCTION), domínio Lifecycle/PMM (não criado — coberto por NSs/Churn em outros domínios).
 - **2026-06-02** — (7ª iteração) (1) **§6 Lifecycle renomeado para Company Metrics** em ambos os idiomas (heading, domain tags, anchors, glossário, KPI matrix, backlog, cross-references); (2) **KPI Matrix reorganizada**: coluna "Plan?" removida; ordem agora é Company Metrics · Financial · Acquisition · Brand; (3) **Cookbook SQL** unificado na versão ES-AR — versão PT-BR passa a apontar para o link, evitando duplicação de código.
 - **2026-06-02** — (6ª iteração) §1.2 **ICPs reescrita** com o framework canônico de 5 segmentos (Platform Migrants, Social Sellers, Offline Sellers, Marketplace Sellers, D2C Starters, Affiliates/Dropshippers) tiered em Premium / Mid-Premium / SMBs. Aplicado em ambos os idiomas (ES-AR + PT-BR).
 - **2026-06-02** — (5ª iteração) Investigação de GMV: off-platform é <1% do total em todos os países (Mar/26) → recomendação no §7.1 de usar `on_platform` como GMV principal. Adicionado **§10 Backlog** com 11 pendências (finance_segment, plans, sources extras, naming bugs do DP1, SOV AI, DP5/DP6, etc.).
-- **2026-06-02** — (4ª iteração) **Hierarquia formal de 4 níveis para `mkt_source`** definida (§3.4 reescrita com tabela completa 16 → 8 → 4 → 2): Nível 1 raw (16), Nível 2 com Long Tail (8), Nível 3 mecânica de aquisição (Performance · Organic · Indirect · Long Tail), Nível 4 relação com marca (Branded · Non-Branded). Glossário §1.1 expandido com Long Tail + Performance/Organic/Indirect. SQL snippet §9.4 ganhou CTE com mapping CASE para todos os níveis. Anti-patterns §8.4 ganharam alertas sobre mistura de níveis e Others vs Long Tail.
+- **2026-06-02** — (4ª iteração) **Hierarquia formal de 4 níveis para `mkt_source`** definida (§3.4 reescrita com tabela completa 16 → 8 → 4 → 2): Nível 1 raw (16), Nível 2 com Low Volume (8), Nível 3 mecânica de aquisição (Performance · Organic · Indirect · Low Volume), Nível 4 relação com marca (Branded · Non-Branded). Glossário §1.1 expandido com Low Volume + Performance/Organic/Indirect. SQL snippet §9.4 ganhou CTE com mapping CASE para todos os níveis. Anti-patterns §8.4 ganharam alertas sobre mistura de níveis e Others vs Low Volume.
 - **2026-06-02** — (3ª iteração) Incorporação dos inputs da reunião de Ops: (1) **`mkt_source` é canônica** para breakdowns por source/lever — `plan_mkt_source_ops` relegado a uso plan-only; (2) **DP4 — GMV (Finance Segments)** ativo: adicionados ~8 KPIs de Volume (GMV total/on/off/POS em LC/USD/Finance USD + Orders + Avg Ticket) removendo placeholders; (3) **Snapshots mensais** dos 4 DPs documentados como padrão de consumo paralelo ao daily (3 famílias vs 6); (4) §3.4 expandido com 8 sources observadas em `mkt_source` ainda a classificar em Brand/Non-Brand com Ops; (5) anti-patterns novos (POS double-count, avg ticket via avg, daily-em-vez-de-snapshot, plan_mkt_source_ops em breakdowns); (6) §9.5 cookbook GMV + §9.6 padrão snapshot.
 - **2026-06-02** — (2ª iteração do dia) Adicionados: **Índice navegável** com âncoras, **KPI Matrix** (visão de pássaro de todos os KPIs catalogados), **§8.4 Anti-patterns** (15 erros comuns com correção + porquê), **§9 Cookbook** (SQL snippets prontos por domínio + template histórico 24m).
 - **2026-06-02** — Reestruturação para virar referência cross-time. Removidos filtros project-specific (country/BU). Adicionados: §1 Glossário (conceitos + ICPs + acrônimos), §2 Dicionário de Dimensões, tags taxonômicas (Domínio · Subdomínio), Related KPIs cruzados. Reorganização dos KPIs por domínio (Brand · Acquisition · Company Metrics · Financial). Adicionados KPIs antes ausentes do DP1/DP2: Bounced Sessions, Total/Organic Users, Avg Pageviews, Avg Session Duration, Payment Created At, New Seller Created At. Adicionado Share of Market — excl. Wix.

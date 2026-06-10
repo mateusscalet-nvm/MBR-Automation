@@ -110,7 +110,7 @@ The MBR runs over **closed months**, therefore it consumes the data products' **
 
 **By `mkt_source`** (4-level hierarchy — see catalog §3.4):
 - **Level 4 (Branded / Non-Branded)** → subsection grouper in Acquisition
-- **Level 2 (8 sources, incl. Long Tail)** → rows within each group
+- **Level 2 (8 sources, incl. Low Volume)** → rows within each group
 
 **By `icp`** (see catalog §2.10) → additional drill-down of funnel KPIs in Acquisition. ⚠️ Depends on external classification source (backlog B12).
 
@@ -149,7 +149,7 @@ Grouped by Level 4 (Branded / Non-Branded), rows in Level 2:
 | ↳ Affiliates | | | | | |
 | ↳ Partners | | | | | |
 | ↳ Organic Growth | | | | | |
-| ↳ Long Tail | | | | | |
+| ↳ Low Volume | | | | | |
 | **Total** | | | | | |
 
 ### T4 — Breakdown by ICP (Acquisition)

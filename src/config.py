@@ -70,11 +70,11 @@ BC_GOALS_TABLE  = f"{_P}.s__brand_and_comms__goals__event"
 # ---------------------------------------------------------------------------
 # mkt_source hierarchy (KPI_CATALOG.md §3.4)
 # ---------------------------------------------------------------------------
-LONG_TAIL_SOURCES = [
+LOW_VOLUME_SOURCES = [
     "Brand & Comms", "Eea", "Enp", "Mandae", "Mid-market",
     "Nurturing", "Others", "Product Marketing", "Store Referral",
 ]
-# Level 2 core sources (everything else maps to itself; long-tail collapses)
+# Level 2 core sources (everything else maps to itself; low-volume collapses)
 LEVEL2_CORE = [
     "Performance Brand", "Organic", "Direct",
     "Performance No Brand", "Affiliates", "Partners", "Organic Growth",
@@ -83,7 +83,7 @@ LEVEL2_CORE = [
 BRANDED_SOURCES = ["Direct", "Organic", "Performance Brand"]
 
 def level2(mkt_source: str) -> str:
-    return "Long Tail" if mkt_source in LONG_TAIL_SOURCES else mkt_source
+    return "Low Volume" if mkt_source in LOW_VOLUME_SOURCES else mkt_source
 
 def level4(mkt_source: str) -> str:
     return "Branded" if mkt_source in BRANDED_SOURCES else "Non-Branded"
