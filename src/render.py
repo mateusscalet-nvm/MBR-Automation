@@ -56,8 +56,10 @@ for _ttf in ("Roboto-Regular.ttf", "Roboto-Bold.ttf"):
     if os.path.exists(_p):
         fm.fontManager.addfont(_p)
 _CHART_FONT = "Roboto" if any("Roboto" in f.name for f in fm.fontManager.ttflist) else "DejaVu Sans"
-_CS = 8  # chart base font size
+_CS = 8   # chart base font size
+_XS = 6   # x-axis label size (small)
 _HALF_W, _CH_H, _DPI = 8.1, 7.5, 150
+_FULL_W, _FULL_H = 17.0, 6.5   # full-width panoramic charts (1 per row)
 
 
 # ---------------------------------------------------------------------------
@@ -244,12 +246,12 @@ def _xlabels(months):
     return out
 
 def _xaxis(ax, months):
-    """Sparse x labels: every 3rd month, always including the last."""
+    """X labels: every 2nd month (incl. last), tiny font."""
     n = len(months)
-    idx = sorted(set(list(range(n - 1, -1, -3)) + [n - 1])) if n else []
+    idx = sorted(set(list(range(n - 1, -1, -2)) + [n - 1])) if n else []
     labels = _xlabels(months)
     ax.set_xticks(idx)
-    ax.set_xticklabels([labels[i] for i in idx], fontsize=_CS - 1, rotation=0)
+    ax.set_xticklabels([labels[i] for i in idx], fontsize=_XS, rotation=0)
 
 def _buf(fig):
     b = io.BytesIO()
@@ -259,7 +261,7 @@ def _buf(fig):
 
 def chart_bars(months, vals, title, ylabel="", color="#2E7D32", pct=False, money=False):
     plt.rcParams["font.family"] = _CHART_FONT
-    fig, ax = plt.subplots(figsize=(_HALF_W/2.54, _CH_H/2.54)); _style(ax)
+    fig, ax = plt.subplots(figsize=(_FULL_W/2.54, _FULL_H/2.54)); _style(ax)
     x = np.arange(len(months))
     colors = [color]*len(vals)
     if len(vals): colors[-1] = "#1B5E20" if color == "#2E7D32" else color
@@ -276,7 +278,7 @@ def chart_bars(months, vals, title, ylabel="", color="#2E7D32", pct=False, money
 
 def chart_line(months, vals, title, plan=None, pct=False, money=False, fill=False):
     plt.rcParams["font.family"] = _CHART_FONT
-    fig, ax = plt.subplots(figsize=(_HALF_W/2.54, _CH_H/2.54)); _style(ax)
+    fig, ax = plt.subplots(figsize=(_FULL_W/2.54, _FULL_H/2.54)); _style(ax)
     x = np.arange(len(months))
     if fill: ax.fill_between(x, vals, alpha=0.12, color="#"+C_BRAND, zorder=2)
     ax.plot(x, vals, "o-", color="#"+C_BRAND, linewidth=1.5, markersize=2.5, zorder=4)
@@ -296,7 +298,7 @@ def chart_line(months, vals, title, plan=None, pct=False, money=False, fill=Fals
 
 def chart_netadds(months, vals, title):
     plt.rcParams["font.family"] = _CHART_FONT
-    fig, ax = plt.subplots(figsize=(_HALF_W/2.54, _CH_H/2.54)); _style(ax)
+    fig, ax = plt.subplots(figsize=(_FULL_W/2.54, _FULL_H/2.54)); _style(ax)
     x = np.arange(len(months))
     colors = ["#0CA76B" if v >= 0 else "#CC3333" for v in vals]
     ax.bar(x, vals, 0.7, color=colors, zorder=3)
@@ -308,7 +310,7 @@ def chart_netadds(months, vals, title):
 
 def chart_stacked(months, series, title, colors):
     plt.rcParams["font.family"] = _CHART_FONT
-    fig, ax = plt.subplots(figsize=(_HALF_W/2.54, _CH_H/2.54)); _style(ax)
+    fig, ax = plt.subplots(figsize=(_FULL_W/2.54, _FULL_H/2.54)); _style(ax)
     x = np.arange(len(months)); bottom = np.zeros(len(months))
     for (name, vals), col in zip(series.items(), colors):
         ax.bar(x, vals, 0.7, bottom=bottom, color=col, label=name, zorder=3)
@@ -321,7 +323,7 @@ def chart_stacked(months, series, title, colors):
 
 def chart_combo(months, bars, lines, title, bar_label, line_labels, line_colors):
     plt.rcParams["font.family"] = _CHART_FONT
-    fig, ax = plt.subplots(figsize=(_HALF_W/2.54, _CH_H/2.54)); _style(ax)
+    fig, ax = plt.subplots(figsize=(_FULL_W/2.54, _FULL_H/2.54)); _style(ax)
     x = np.arange(len(months))
     ax.bar(x, bars, 0.7, color="#B0BEC5", label=bar_label, zorder=2)
     for vals, lab, col in zip(lines, line_labels, line_colors):
@@ -333,15 +335,12 @@ def chart_combo(months, bars, lines, title, bar_label, line_labels, line_colors)
     fig.tight_layout(); return _buf(fig)
 
 def add_chart_grid(doc, bufs):
-    """bufs: list of up to 4 BytesIO. Lays out 2x2 in an invisible table."""
-    rows = (len(bufs) + 1) // 2
-    table = doc.add_table(rows=rows, cols=2)
-    no_borders(table)
-    half = Cm(_HALF_W)
-    for i, buf in enumerate(bufs):
-        cell = table.cell(i // 2, i % 2); cell.width = half
-        p = cell.paragraphs[0]; p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.add_run().add_picture(buf, width=half)
+    """Full-width charts, one per row (stacked vertically)."""
+    full = Cm(_FULL_W)
+    for buf in bufs:
+        p = doc.add_paragraph(); p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.paragraph_format.space_after = Pt(2)
+        p.add_run().add_picture(buf, width=full)
     spacer(doc, 4)
 
 
