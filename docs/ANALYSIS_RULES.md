@@ -47,6 +47,21 @@ State the movement, decompose what you can, and **explicitly flag the gap as nee
 
 ✅ *"NPs missed plan by 9% with no offsetting movement in Trials or CVR that we can isolate from the data — the driver is not yet identifiable and should be explored."*
 
+### 1.4 Mandatory check — mix vs rate for any aggregate ratio
+
+Whenever a **blended ratio** moves (CVR, CTR, Engagement Rate, Avg Ticket, Share, Churn Rate — anything that is `SUM(num)/SUM(den)` across segments), you **must** decompose the move into two effects **before** assigning any cause:
+
+- **Mix effect** — the blended ratio moved because segment *weights* shifted, even if every segment's own ratio held. (A high-converting segment shrinking drags the blend down on its own.)
+- **Rate effect** — the segments' *own* ratios changed (the genuine performance signal).
+
+How to test it: recompute the aggregate **excluding the segment whose weight changed most**, and inspect the per-segment ratios across periods. If the blend moves but segments hold → it's **mix**. If segments themselves move → it's **rate**.
+
+A drop driven by mix is **not** a performance problem — it is a portfolio composition change, and saying "conversion got worse" would be wrong. Always state which effect dominates.
+
+✅ *"Blended CVR Trial→NP fell −1.6pp MoM, but this is mostly a rate effect: the high-CVR Affiliates segment was cut (a mix drag of only ~0.2pp), and excluding it conversion still fell −1.4pp with nearly every core channel down. The softness is broad-based, not a composition artifact."*
+
+❌ *"Blended CVR fell, so conversion is deteriorating"* — without the mix/rate split this can be entirely wrong (the blend can fall purely because a high-converting segment shrank).
+
 ---
 
 ## 2. Context injection — the Context Card
@@ -164,6 +179,7 @@ Inherited from the catalog's gotchas — these are writing rules, not just query
 - **No trend from one point.** A single month is a data point, not a trend. Don't write "declining trend" off one MoM move.
 - **Trial→NP temporal mismatch.** NPs in month X may come from Trials of month X-1. Don't attribute the month's NPs to the month's Trials as if they were the same cohort (catalog §5.2).
 - **Ratios are not averages of ratios.** When citing CTR, Share, Engagement, CVR — they're computed `SUM(num)/SUM(den)`, never the mean of daily ratios (catalog §0.5).
+- **Mix vs rate, always (§1.4).** Before attributing a cause to any blended-ratio move (CVR, CTR, ticket, share, churn rate), decompose mix effect vs rate effect. A blend can move purely because segment weights shifted while every segment held.
 - **POS is a subset of on-platform GMV** — don't double-count (catalog §7.1).
 - **Plan exists only for some KPIs.** Don't cite Attainment% for a KPI with no plan (catalog §0.7).
 
@@ -179,6 +195,7 @@ Inherited from the catalog's gotchas — these are writing rules, not just query
 | "A clear downward trend in NPs" *(one month)* | "NPs −12% MoM; too early to call a trend" | No trend from one point |
 | "NPs grew because Trials grew" *(same month)* | "NPs reflect Trials from prior months; this month's Trials (+5%) should support next month's NPs" | Temporal mismatch |
 | "Performance was solid overall" | "Branded delivered (+8% vs plan); Non-Branded was the drag (−15%)" | Decompose; don't average away the story |
+| "Blended CVR fell, conversion is worse" | "CVR −1.6pp: ~0.2pp mix (high-CVR segment cut), ~1.4pp rate (core channels down)" | Mix vs rate before cause (§1.4) |
 | Restating each section in the TL;DR | Naming one Defining Theme that connects them | TL;DR synthesizes |
 | "Likely due to the campaign" *(card says `hypothesis`)* | "Possibly linked to the campaign; to be validated" | Respect the card's `status` |
 
@@ -193,6 +210,7 @@ Before a block is final, it must pass:
 - [ ] No external cause appears without a Context Card.
 - [ ] Hypotheses are explicitly marked and confined to Gap & Hypothesis (or TL;DR discussion).
 - [ ] pp vs % used correctly.
+- [ ] Any blended-ratio move is decomposed mix vs rate before a cause is assigned (§1.4).
 - [ ] No trend claimed from a single month.
 - [ ] Canonical terminology and KPI names.
 - [ ] No fluff adjectives.
@@ -203,4 +221,5 @@ Before a block is final, it must pass:
 
 ## 11. Changelog
 
+- **2026-06-09** — Added **§1.4 Mandatory mix vs rate check** for aggregate ratios (decompose mix effect vs rate effect before assigning a cause), with reinforcing entries in §8 guardrails, §9 anti-patterns, and §10 checklist. Data implication: the fetcher must provide segment-level breakdowns across periods (not just current month) for ratio KPIs to enable this check.
 - **2026-06-02** — Initial version. Establishes the causality doctrine (internal vs external), the Context Card mechanism (with `status` confidence control and free `analyst_take`), the 3-level assertion tree, per-block and TL;DR rules, tone, terminology, statistical guardrails, anti-patterns, and the acceptance checklist. Role: Senior Marketing Director.
