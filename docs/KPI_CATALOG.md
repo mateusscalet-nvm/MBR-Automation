@@ -378,6 +378,7 @@ Todas están bajo `data_products_prd.data_marketing`.
 - Append-only — cambios retroactivos aguas arriba (ej.: flips en `flg_gmv`) **no** se reflejan después del snapshot
 - Particionados por `snapshot_month` (INT `yyyyMM`)
 - Tienen solo las 3 familias canónicas (`effective_*`, `forecast_*`, `expected_monthly_*`) — sin `ponderation_key_*`, sin split linear/weighted (no tiene sentido en grain mensual)
+- ⚠️ **DP3 snapshot omite el sufijo `_daily`**: las columnas son `effective_branded_searches_sc` (no `..._sc_daily`), `effective_branded_searches_tiendanube_kwp`, `expected_monthly_branded_share_tiendanube_kwp`, etc. Los nombres con `_daily` solo existen en la tabla *daily*. El cookbook §9 usa la tabla daily; al consultar el snapshot, quitar `_daily`.
 
 ### 3.2 Raw event tables (Brand & Comms)
 
@@ -1777,6 +1778,7 @@ Todas estão sob `data_products_prd.data_marketing`.
 - Append-only — mudanças retroativas a montante (ex: flips em `flg_gmv`) **não** refletem após o snapshot
 - Particionados por `snapshot_month` (INT `yyyyMM`)
 - Têm apenas as 3 famílias canônicas (`effective_*`, `forecast_*`, `expected_monthly_*`) — sem `ponderation_key_*`, sem split linear/weighted (não faz sentido no grão mensal)
+- ⚠️ **DP3 snapshot omite o sufixo `_daily`**: as colunas são `effective_branded_searches_sc` (não `..._sc_daily`), `effective_branded_searches_tiendanube_kwp`, `expected_monthly_branded_share_tiendanube_kwp`, etc. Os nomes com `_daily` só existem na tabela *daily*. O cookbook §9 usa a tabela daily; ao consultar o snapshot, remover `_daily`.
 
 ### 3.2 Raw event tables (Brand & Comms)
 

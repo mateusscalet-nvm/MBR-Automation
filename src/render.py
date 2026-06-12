@@ -83,8 +83,9 @@ def fmt_int(v):
 
 def fmt_money(v):
     v = fv(v)
-    if abs(v) >= 1_000_000: return f"{CURRENCY} {v/1_000_000:.1f}M"
-    if abs(v) >= 1_000:     return f"{CURRENCY} {v/1_000:.0f}K"
+    if abs(v) >= 1_000_000_000: return f"{CURRENCY} {v/1_000_000_000:.2f}B"
+    if abs(v) >= 1_000_000:     return f"{CURRENCY} {v/1_000_000:.1f}M"
+    if abs(v) >= 1_000:         return f"{CURRENCY} {v/1_000:.0f}K"
     return f"{CURRENCY} {v:,.0f}"
 
 def fmt_pct(v, dec=1):

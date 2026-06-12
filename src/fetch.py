@@ -302,13 +302,14 @@ def fetch_brand(conn) -> dict:
 # ---------------------------------------------------------------------------
 # Financial — DP4 (GMV)
 # ---------------------------------------------------------------------------
+# GMV principal = on-platform (catalog §7.1; off-platform <1%, so on ~= total)
 _DP4_METRICS = """
-    SUM(effective_gmv_total_lc)          AS gmv_lc,
-    SUM(effective_gmv_total_usd)         AS gmv_usd,
-    SUM(effective_gmv_total_finance_usd) AS gmv_fin_usd,
+    SUM(effective_gmv_on_platform_lc)          AS gmv_lc,
+    SUM(effective_gmv_on_platform_usd)         AS gmv_usd,
+    SUM(effective_gmv_on_platform_finance_usd) AS gmv_fin_usd,
     SUM(effective_gmv_on_platform_lc - effective_gmv_pos_lc) AS gmv_on_wo_pos_lc,
     SUM(effective_gmv_pos_lc)            AS gmv_pos_lc,
-    SUM(effective_orders_total)          AS orders,
+    SUM(effective_orders_on_platform)    AS orders,
     SUM(expected_monthly_gmv_on_platform_without_pos_lc) AS gmv_on_wo_pos_plan,
     SUM(expected_monthly_gmv_pos_lc)     AS gmv_pos_plan
 """
@@ -337,8 +338,8 @@ def fetch_financial(conn) -> dict:
         "gmv_pos":     make_kpi(m.get("gmv_pos_lc"), m.get("gmv_pos_plan"), pm.get("gmv_pos_lc")),
     }
     sql_h = f"""
-        SELECT month_label, SUM(effective_gmv_total_lc) AS gmv_lc,
-               SUM(effective_gmv_total_usd) AS gmv_usd
+        SELECT month_label, SUM(effective_gmv_on_platform_lc) AS gmv_lc,
+               SUM(effective_gmv_on_platform_usd) AS gmv_usd
         FROM {C.DP4_SNAPSHOT}
         WHERE {_bu_filter()} AND month_label IN ({_labels_in(C.HISTORY_MONTH_LABELS)})
         GROUP BY month_label ORDER BY month_label

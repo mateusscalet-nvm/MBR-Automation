@@ -216,7 +216,7 @@ KPIs in top-of-funnel → financial-impact order:
 7. New Sellers
 8. Net Adds 🟡
 9. Merchant Base 🟡
-10. GMV (on-platform, local currency + USD)
+10. GMV (on-platform, local currency)
 11. Orders
 12. % Seller ⚠️
 13. GMV per Seller ⚠️
