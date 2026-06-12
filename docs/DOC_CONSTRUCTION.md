@@ -44,8 +44,7 @@ Base filter for the whole report: `country = <param>` AND `business_unit = 'SMB'
 ### 0.3 Page and typography
 
 - **Page:** A4, 1.5 cm margins, portrait
-- **Text font:** Arial (body, headings)
-- **Table and chart font:** Roboto
+- **Font (all):** Roboto (body, headings, tables, charts)
 - **Sizes:** 16pt document title · 13pt section · 10pt body · 9pt table cells
 
 ### 0.4 Colors (Nuvemshop Insti Styleguide)

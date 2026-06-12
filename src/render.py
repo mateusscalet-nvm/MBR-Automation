@@ -45,7 +45,7 @@ C_GREEN      = "0CA76B"
 C_AMBER      = "9A7000"
 C_RED        = "CC3333"
 
-FONT_TEXT  = "Arial"
+FONT_TEXT  = "Roboto"
 FONT_TABLE = "Roboto"
 
 CURRENCY = {"BR": "R$", "AR": "$", "MX": "$"}.get(C.COUNTRY, "$")
