@@ -380,36 +380,39 @@ def build_tldr(doc, an):
     spacer(doc)
 
 
+T1_HEADERS = ["KPI", "Real", "Plan", "%Achv", "YoY%", "YTD", "%Achv YTD", "YoY% YTD"]
+
 def write_kpi_row(table, ri, name, kpi, kind="num", fmt=fmt_k, inverted=False):
-    """Row for Metric|Real|Plan|%Achv|M-1|MoM%|YoY%.
-    kind: num | money | ratio | blocked. Ratios show pp for MoM."""
+    """T1 row (DOC_CONSTRUCTION): KPI|Real|Plan|%Achv|YoY%|YTD|%Achv YTD|YoY% YTD.
+    kind: num | money | ratio | blocked."""
     cells = table.rows[ri].cells
     bg = C_ALT if ri % 2 == 0 else C_WHITE
     for c in cells: shade(c, bg)
     write_cell(cells[0], name, color=C_TEXT, align=WD_ALIGN_PARAGRAPH.LEFT)
     if kind == "blocked":
-        for ci in range(1, 7): write_cell(cells[ci], "—", color=C_GRAY)
+        for ci in range(1, 8): write_cell(cells[ci], "—", color=C_GRAY)
         return
     if kind == "ratio":
         write_cell(cells[1], fmt_pct(kpi.get("real")))
         write_cell(cells[2], fmt_pct(kpi["plan"]) if kpi.get("plan") else "—")
         write_cell(cells[3], "—")
-        write_cell(cells[4], fmt_pct(kpi.get("m1")) if kpi.get("m1") is not None else "—")
-        pp = (fv(kpi.get("real")) - fv(kpi.get("m1"))) if kpi.get("m1") is not None else None
-        write_cell(cells[5], fmt_pp(pp) if pp is not None else "—", color=mom_color(pp, inverted))
+        write_cell(cells[4], "—")
+        write_cell(cells[5], fmt_pct(kpi.get("ytd")) if kpi.get("ytd") is not None else "—")
         write_cell(cells[6], "—")
+        write_cell(cells[7], "—")
         return
     # num / money
+    att = kpi.get("attainment"); att_ytd = kpi.get("attainment_ytd")
+    yoy = kpi.get("yoy_pct"); yoy_ytd = kpi.get("yoy_ytd_pct")
     write_cell(cells[1], fmt(kpi.get("real")))
     write_cell(cells[2], fmt(kpi["plan"]) if kpi.get("plan") else "—")
-    att = kpi.get("attainment")
     write_cell(cells[3], fmt_pct(att) if att is not None else "—",
                color=mom_color((att - 1) if att is not None else None, inverted))
-    write_cell(cells[4], fmt(kpi["m1"]) if kpi.get("m1") is not None else "—")
-    mom = kpi.get("mom")
-    write_cell(cells[5], fmt_signed_pct(mom) if mom is not None else "—", color=mom_color(mom, inverted))
-    yoy = kpi.get("yoy_pct")
-    write_cell(cells[6], fmt_signed_pct(yoy) if yoy is not None else "—", color=mom_color(yoy, inverted))
+    write_cell(cells[4], fmt_signed_pct(yoy) if yoy is not None else "—", color=mom_color(yoy, inverted))
+    write_cell(cells[5], fmt(kpi["ytd"]) if kpi.get("ytd") is not None else "—")
+    write_cell(cells[6], fmt_pct(att_ytd) if att_ytd is not None else "—",
+               color=mom_color((att_ytd - 1) if att_ytd is not None else None, inverted))
+    write_cell(cells[7], fmt_signed_pct(yoy_ytd) if yoy_ytd is not None else "—", color=mom_color(yoy_ytd, inverted))
 
 
 def build_main_kpis(doc, dp, an):
@@ -432,8 +435,8 @@ def build_main_kpis(doc, dp, an):
         ("% Seller",           {},                         "blocked", None,    False),
         ("GMV per Seller",     {},                         "blocked", None,    False),
     ]
-    table = doc.add_table(rows=len(rows)+1, cols=7); table.style = "Table Grid"
-    table_header(table, ["KPI", "Real", "Plan", "%Achv", "M-1", "MoM%", "YoY%"])
+    table = doc.add_table(rows=len(rows)+1, cols=8); table.style = "Table Grid"
+    table_header(table, T1_HEADERS)
     for i, (name, kpi, kind, fmt, inv) in enumerate(rows, 1):
         write_kpi_row(table, i, name, kpi, kind, fmt or fmt_k, inv)
     spacer(doc)
@@ -463,32 +466,12 @@ def build_brand(doc, dp, an):
         chart_line(m, [fv(r["branded_kwp"])/fv(r["d2c_kwp"],1)*100 if fv(r["d2c_kwp"]) else 0 for r in sh], "Share of Market", pct=True),
     ])
     # 3.1 table (T1)
-    rows = [("Branded Searches", mac["branded_searches"], fmt_k),
-            ("Branded CTR %", {"real": mac["branded_ctr"]["real"], "m1": mac["branded_ctr"]["m1"]}, None),
-            ("Share of Market", mac["share_of_market"], None),
-            ("Total Market", mac["total_market"], fmt_k)]
-    table = doc.add_table(rows=5, cols=7); table.style = "Table Grid"
-    table_header(table, ["Metric", "Real", "Plan", "%Achv", "M-1", "MoM%", "YoY%"])
+    table = doc.add_table(rows=5, cols=8); table.style = "Table Grid"
+    table_header(table, T1_HEADERS)
     write_kpi_row(table, 1, "Branded Searches", mac["branded_searches"], "num", fmt_k)
-    # CTR row (pct, no plan)
-    for ri, (nm, kpi) in enumerate([("Branded CTR %", mac["branded_ctr"]),
-                                    ("Share of Market", mac["share_of_market"]),
-                                    ("Total Market", mac["total_market"])], start=2):
-        cells = table.rows[ri].cells; bg = C_ALT if ri % 2 == 0 else C_WHITE
-        for c in cells: shade(c, bg)
-        write_cell(cells[0], nm, color=C_TEXT, align=WD_ALIGN_PARAGRAPH.LEFT)
-        if nm == "Total Market":
-            write_cell(cells[1], fmt_k(kpi["real"]))
-        else:
-            write_cell(cells[1], fmt_pct(kpi["real"]))
-        write_cell(cells[2], fmt_pct(kpi["plan"]) if kpi.get("plan") else "—")
-        write_cell(cells[3], "—")
-        if nm == "Total Market":
-            write_cell(cells[4], fmt_k(kpi.get("m1")))
-        else:
-            write_cell(cells[4], fmt_pct(kpi.get("m1")))
-        write_cell(cells[5], fmt_signed_pct(kpi.get("mom")) if kpi.get("mom") is not None else "—", color=mom_color(kpi.get("mom")))
-        write_cell(cells[6], "—")
+    write_kpi_row(table, 2, "Branded CTR %", mac["branded_ctr"], "ratio")
+    write_kpi_row(table, 3, "Share of Market", mac["share_of_market"], "ratio")
+    write_kpi_row(table, 4, "Total Market", mac["total_market"], "num", fmt_k)
     spacer(doc)
     # 3.2 PR
     subsection(doc, "3.2 PR")
@@ -552,8 +535,8 @@ def build_acquisition(doc, dp, an):
             ("New Payments", mac["new_payments"], fmt_k, False),
             ("New Sellers", mac["new_sellers"], fmt_k, False),
             ("QLs", mac["qls"], fmt_k, False)]
-    table = doc.add_table(rows=len(rows)+1, cols=7); table.style = "Table Grid"
-    table_header(table, ["KPI", "Real", "Plan", "%Achv", "M-1", "MoM%", "YoY%"])
+    table = doc.add_table(rows=len(rows)+1, cols=8); table.style = "Table Grid"
+    table_header(table, T1_HEADERS)
     for i, (nm, kpi, fmt, inv) in enumerate(rows, 1):
         write_kpi_row(table, i, nm, kpi, "num", fmt, inv)
     spacer(doc)
