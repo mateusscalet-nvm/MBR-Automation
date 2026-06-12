@@ -49,6 +49,8 @@ FONT_TEXT  = "Arial"
 FONT_TABLE = "Roboto"
 
 CURRENCY = {"BR": "R$", "AR": "$", "MX": "$"}.get(C.COUNTRY, "$")
+CURRENCY_CODE = {"BR": "BRL", "AR": "ARP", "MX": "MXP"}.get(C.COUNTRY, "LC")
+GMV_TITLE = f"GMV ({CURRENCY_CODE})"
 
 # Fonts for matplotlib
 for _ttf in ("Roboto-Regular.ttf", "Roboto-Bold.ttf"):
@@ -246,12 +248,15 @@ def _xlabels(months):
     return out
 
 def _xaxis(ax, months):
-    """X labels: every 2nd month (incl. last), tiny font."""
+    """X labels: every 2nd month (incl. last), tiny font, month/year (Jun/24)."""
+    from datetime import datetime
     n = len(months)
     idx = sorted(set(list(range(n - 1, -1, -2)) + [n - 1])) if n else []
-    labels = _xlabels(months)
+    def lab(m):
+        try: return datetime.strptime(m + "-01", "%Y-%m-%d").strftime("%b/%y")
+        except Exception: return m
     ax.set_xticks(idx)
-    ax.set_xticklabels([labels[i] for i in idx], fontsize=_XS, rotation=0)
+    ax.set_xticklabels([lab(months[i]) for i in idx], fontsize=_XS, rotation=0)
 
 def _buf(fig):
     b = io.BytesIO()
@@ -303,6 +308,11 @@ def chart_netadds(months, vals, title):
     colors = ["#0CA76B" if v >= 0 else "#CC3333" for v in vals]
     ax.bar(x, vals, 0.7, color=colors, zorder=3)
     ax.axhline(0, color="#"+C_BORDER, linewidth=0.8)
+    if len(vals):
+        v = vals[-1]
+        ax.annotate(fmt_k(v), xy=(x[-1], v), xytext=(0, 3 if v >= 0 else -10),
+                    textcoords="offset points", ha="center", fontsize=_CS-1,
+                    color="#"+(C_GREEN if v >= 0 else C_RED))
     _xaxis(ax, months)
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda v,_: fmt_k(v)))
     ax.set_title(title, fontsize=_CS, color="#"+C_TEXT, pad=4)
@@ -430,7 +440,7 @@ def build_main_kpis(doc, dp, an):
         ("New Sellers",        mac["new_sellers"],         "num",   fmt_k,     False),
         ("Net Adds",           cm["net_adds"],             "num",   fmt_int,   False),
         ("Merchant Base",      cm["merchant_base"],        "num",   fmt_k,     False),
-        ("GMV (local)",        fin["gmv_lc"],              "money", fmt_money, False),
+        (GMV_TITLE,        fin["gmv_lc"],              "money", fmt_money, False),
         ("Orders",             fin["orders"],              "num",   fmt_k,     False),
         ("% Seller",           {},                         "blocked", None,    False),
         ("GMV per Seller",     {},                         "blocked", None,    False),
@@ -447,7 +457,7 @@ def build_main_kpis(doc, dp, an):
         chart_bars(m, [fv(r["trials"]) for r in fh], "Trials"),
         chart_bars(m, [fv(r["nps"]) for r in fh], "New Payments", color="#2E7D32"),
         chart_netadds([r["month_label"] for r in ch], [fv(r["net_adds"]) for r in ch], "Net Adds"),
-        chart_line([r["month_label"] for r in gh], [fv(r["gmv_lc"]) for r in gh], "GMV (local)", money=True, fill=True),
+        chart_line([r["month_label"] for r in gh], [fv(r["gmv_lc"]) for r in gh], GMV_TITLE, money=True, fill=True),
     ])
 
 
@@ -633,10 +643,10 @@ def build_financial(doc, dp, an):
     subsection(doc, "6.1 GMV")
     m = [r["month_label"] for r in gh]
     add_chart_grid(doc, [
-        chart_line(m, [fv(r["gmv_lc"]) for r in gh], "GMV (local)", money=True, fill=True),
+        chart_line(m, [fv(r["gmv_lc"]) for r in gh], GMV_TITLE, money=True, fill=True),
         chart_bars(m, [fv(r["gmv_usd"]) for r in gh], "GMV (USD)", color="#2E7D32", money=True),
     ])
-    rows = [("GMV (local)", g["gmv_lc"], fmt_money),
+    rows = [(GMV_TITLE, g["gmv_lc"], fmt_money),
             ("GMV (USD)", g["gmv_usd"], fmt_money),
             ("Orders", g["orders"], fmt_k),
             ("Avg Ticket", {"real": g["avg_ticket"]["real"], "m1": g["avg_ticket"]["m1"]}, fmt_money)]
