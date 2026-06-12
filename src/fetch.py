@@ -353,7 +353,8 @@ def fetch_financial(conn) -> dict:
 # ---------------------------------------------------------------------------
 def fetch_company_metrics() -> dict:
     log.info("Company Metrics (CSV placeholder)...")
-    raw = pd.read_csv(C.NET_ADDS_CSV, usecols=range(12))
+    # dtype=str: keep raw text so "97.690" isn't inferred as float 97.69 (loses trailing zero)
+    raw = pd.read_csv(C.NET_ADDS_CSV, usecols=range(12), dtype=str)
     raw.columns = ["date", "country", "month_name", "ajuste", "churns", "net_adds",
                    "downsell_freemium", "first_payments", "new_phoenix", "old_phoenix",
                    "merchant_base", "churn_and_downgrade"]
