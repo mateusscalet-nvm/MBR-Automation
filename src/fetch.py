@@ -70,6 +70,19 @@ def _attain(real, plan):
     return real / plan if plan else None
 
 
+def make_kpi(real, plan=None, prior=None, yoy=None, ytd=None, ytd_plan=None, ytd_prior=None):
+    """Build a KPI dict. Only includes the comparison fields that are provided.
+    Adds YTD / %Achv YTD / YoY YTD when YTD inputs are given (DOC_CONSTRUCTION T1)."""
+    d = {"real": _num(real)}
+    if plan is not None:      d["plan"] = _num(plan); d["attainment"] = _attain(real, plan)
+    if prior is not None:     d["m1"] = _num(prior); d["mom"] = _chg(real, prior)
+    if yoy is not None:       d["yoy"] = _num(yoy); d["yoy_pct"] = _chg(real, yoy)
+    if ytd is not None:       d["ytd"] = _num(ytd)
+    if ytd_plan is not None:  d["ytd_plan"] = _num(ytd_plan); d["attainment_ytd"] = _attain(ytd, ytd_plan)
+    if ytd_prior is not None: d["yoy_ytd_pct"] = _chg(ytd, ytd_prior)
+    return d
+
+
 # ---------------------------------------------------------------------------
 # Generic snapshot helpers
 # ---------------------------------------------------------------------------
@@ -119,30 +132,31 @@ def fetch_acquisition(conn) -> dict:
     m   = _snap_row(conn, C.DP1_SNAPSHOT, _DP1_METRICS, C.MONTH_LABEL)
     pm  = _snap_row(conn, C.DP1_SNAPSHOT, _DP1_METRICS, C.PRIOR_MONTH_LABEL)
     yy  = _snap_row(conn, C.DP1_SNAPSHOT, _DP1_METRICS, C.PRIOR_YEAR_MONTH_LABEL)
-    ytd = _snap_ytd(conn, C.DP1_SNAPSHOT, _DP1_METRICS, C.YTD_MONTH_LABELS)
+    ytd  = _snap_ytd(conn, C.DP1_SNAPSHOT, _DP1_METRICS, C.YTD_MONTH_LABELS)
+    ytdp = _snap_ytd(conn, C.DP1_SNAPSHOT, _DP1_METRICS, C.PRIOR_YEAR_YTD_MONTH_LABELS)
     s_m  = _snap_row(conn, C.DP2_SNAPSHOT, _DP2_METRICS, C.MONTH_LABEL)
     s_pm = _snap_row(conn, C.DP2_SNAPSHOT, _DP2_METRICS, C.PRIOR_MONTH_LABEL)
     s_yy = _snap_row(conn, C.DP2_SNAPSHOT, _DP2_METRICS, C.PRIOR_YEAR_MONTH_LABEL)
-
-    def kpi(real, plan=None, prior=None, yoy=None):
-        d = {"real": _num(real)}
-        if plan is not None:  d["plan"] = _num(plan); d["attainment"] = _attain(real, plan)
-        if prior is not None: d["m1"] = _num(prior); d["mom"] = _chg(real, prior)
-        if yoy is not None:   d["yoy"] = _num(yoy); d["yoy_pct"] = _chg(real, yoy)
-        return d
+    s_ytd  = _snap_ytd(conn, C.DP2_SNAPSHOT, _DP2_METRICS, C.YTD_MONTH_LABELS)
+    s_ytdp = _snap_ytd(conn, C.DP2_SNAPSHOT, _DP2_METRICS, C.PRIOR_YEAR_YTD_MONTH_LABELS)
 
     out["macro"] = {
-        "sessions":      kpi(s_m.get("sessions"), None, s_pm.get("sessions"), s_yy.get("sessions")),
-        "trials":        kpi(m.get("trials"), m.get("trials_plan"), pm.get("trials"), yy.get("trials")),
-        "new_payments":  kpi(m.get("nps"), m.get("nps_plan"), pm.get("nps"), yy.get("nps")),
-        "new_sellers":   kpi(m.get("nss"), m.get("nss_plan"), pm.get("nss"), yy.get("nss")),
-        "qls":           kpi(m.get("qls"), m.get("qls_plan"), pm.get("qls"), yy.get("qls")),
+        "sessions":     make_kpi(s_m.get("sessions"), None, s_pm.get("sessions"), s_yy.get("sessions"),
+                                 s_ytd.get("sessions"), None, s_ytdp.get("sessions")),
+        "trials":       make_kpi(m.get("trials"), m.get("trials_plan"), pm.get("trials"), yy.get("trials"),
+                                 ytd.get("trials"), ytd.get("trials_plan"), ytdp.get("trials")),
+        "new_payments": make_kpi(m.get("nps"), m.get("nps_plan"), pm.get("nps"), yy.get("nps"),
+                                 ytd.get("nps"), ytd.get("nps_plan"), ytdp.get("nps")),
+        "new_sellers":  make_kpi(m.get("nss"), m.get("nss_plan"), pm.get("nss"), yy.get("nss"),
+                                 ytd.get("nss"), ytd.get("nss_plan"), ytdp.get("nss")),
+        "qls":          make_kpi(m.get("qls"), m.get("qls_plan"), pm.get("qls"), yy.get("qls"),
+                                 ytd.get("qls"), ytd.get("qls_plan"), ytdp.get("qls")),
         "cvr_session_trial": {"real": _ratio(m.get("trials"), s_m.get("sessions")),
-                              "m1": _ratio(pm.get("trials"), s_pm.get("sessions"))},
+                              "m1": _ratio(pm.get("trials"), s_pm.get("sessions")),
+                              "ytd": _ratio(ytd.get("trials"), s_ytd.get("sessions"))},
         "cvr_trial_np":      {"real": _ratio(m.get("nps"), m.get("trials")),
-                              "m1": _ratio(pm.get("nps"), pm.get("trials"))},
-        "ytd": {"trials": _num(ytd.get("trials")), "nps": _num(ytd.get("nps")),
-                "nss": _num(ytd.get("nss"))},
+                              "m1": _ratio(pm.get("nps"), pm.get("trials")),
+                              "ytd": _ratio(ytd.get("nps"), ytd.get("trials"))},
     }
 
     # --- By source (Level 1 raw -> grouped in compute step) ---
@@ -201,19 +215,21 @@ def fetch_brand(conn) -> dict:
     m  = _snap_row(conn, C.DP3_SNAPSHOT, _DP3_METRICS, C.MONTH_LABEL)
     pm = _snap_row(conn, C.DP3_SNAPSHOT, _DP3_METRICS, C.PRIOR_MONTH_LABEL)
     yy = _snap_row(conn, C.DP3_SNAPSHOT, _DP3_METRICS, C.PRIOR_YEAR_MONTH_LABEL)
+    ytd  = _snap_ytd(conn, C.DP3_SNAPSHOT, _DP3_METRICS, C.YTD_MONTH_LABELS)
+    ytdp = _snap_ytd(conn, C.DP3_SNAPSHOT, _DP3_METRICS, C.PRIOR_YEAR_YTD_MONTH_LABELS)
 
     out["macro"] = {
-        "branded_searches": {"real": _num(m.get("bs_sc")), "plan": _num(m.get("bs_sc_plan")),
-                             "attainment": _attain(m.get("bs_sc"), m.get("bs_sc_plan")),
-                             "m1": _num(pm.get("bs_sc")), "mom": _chg(m.get("bs_sc"), pm.get("bs_sc")),
-                             "yoy": _num(yy.get("bs_sc")), "yoy_pct": _chg(m.get("bs_sc"), yy.get("bs_sc"))},
+        "branded_searches": make_kpi(m.get("bs_sc"), m.get("bs_sc_plan"), pm.get("bs_sc"), yy.get("bs_sc"),
+                                     ytd.get("bs_sc"), ytd.get("bs_sc_plan"), ytdp.get("bs_sc")),
         "branded_ctr": {"real": _ratio(m.get("clicks_sc"), m.get("bs_sc")),
-                        "m1": _ratio(pm.get("clicks_sc"), pm.get("bs_sc"))},
+                        "m1": _ratio(pm.get("clicks_sc"), pm.get("bs_sc")),
+                        "ytd": _ratio(ytd.get("clicks_sc"), ytd.get("bs_sc"))},
         "share_of_market": {"real": _ratio(m.get("bs_kwp"), m.get("d2c_kwp")),
                             "plan": _num(m.get("som_plan")),
-                            "m1": _ratio(pm.get("bs_kwp"), pm.get("d2c_kwp"))},
-        "total_market": {"real": _num(m.get("total_market")), "m1": _num(pm.get("total_market")),
-                         "mom": _chg(m.get("total_market"), pm.get("total_market"))},
+                            "m1": _ratio(pm.get("bs_kwp"), pm.get("d2c_kwp")),
+                            "ytd": _ratio(ytd.get("bs_kwp"), ytd.get("d2c_kwp"))},
+        "total_market": make_kpi(m.get("total_market"), None, pm.get("total_market"), yy.get("total_market"),
+                                 ytd.get("total_market"), None, ytdp.get("total_market")),
     }
 
     # PR (clipping) — raw event, by date_month
@@ -304,22 +320,21 @@ def fetch_financial(conn) -> dict:
     m  = _snap_row(conn, C.DP4_SNAPSHOT, _DP4_METRICS, C.MONTH_LABEL)
     pm = _snap_row(conn, C.DP4_SNAPSHOT, _DP4_METRICS, C.PRIOR_MONTH_LABEL)
     yy = _snap_row(conn, C.DP4_SNAPSHOT, _DP4_METRICS, C.PRIOR_YEAR_MONTH_LABEL)
-
-    def kpi(real, plan=None, prior=None, yoy=None):
-        d = {"real": _num(real)}
-        if plan is not None:  d["plan"] = _num(plan); d["attainment"] = _attain(real, plan)
-        if prior is not None: d["m1"] = _num(prior); d["mom"] = _chg(real, prior)
-        if yoy is not None:   d["yoy"] = _num(yoy); d["yoy_pct"] = _chg(real, yoy)
-        return d
+    ytd  = _snap_ytd(conn, C.DP4_SNAPSHOT, _DP4_METRICS, C.YTD_MONTH_LABELS)
+    ytdp = _snap_ytd(conn, C.DP4_SNAPSHOT, _DP4_METRICS, C.PRIOR_YEAR_YTD_MONTH_LABELS)
 
     out["gmv"] = {
-        "gmv_lc":      kpi(m.get("gmv_lc"), None, pm.get("gmv_lc"), yy.get("gmv_lc")),
-        "gmv_usd":     kpi(m.get("gmv_usd"), None, pm.get("gmv_usd"), yy.get("gmv_usd")),
-        "gmv_fin_usd": kpi(m.get("gmv_fin_usd"), None, pm.get("gmv_fin_usd"), yy.get("gmv_fin_usd")),
-        "orders":      kpi(m.get("orders"), None, pm.get("orders"), yy.get("orders")),
+        "gmv_lc":      make_kpi(m.get("gmv_lc"), None, pm.get("gmv_lc"), yy.get("gmv_lc"),
+                                ytd.get("gmv_lc"), None, ytdp.get("gmv_lc")),
+        "gmv_usd":     make_kpi(m.get("gmv_usd"), None, pm.get("gmv_usd"), yy.get("gmv_usd"),
+                                ytd.get("gmv_usd"), None, ytdp.get("gmv_usd")),
+        "gmv_fin_usd": make_kpi(m.get("gmv_fin_usd"), None, pm.get("gmv_fin_usd"), yy.get("gmv_fin_usd")),
+        "orders":      make_kpi(m.get("orders"), None, pm.get("orders"), yy.get("orders"),
+                                ytd.get("orders"), None, ytdp.get("orders")),
         "avg_ticket":  {"real": _ratio(m.get("gmv_lc"), m.get("orders")),
-                        "m1": _ratio(pm.get("gmv_lc"), pm.get("orders"))},
-        "gmv_pos":     kpi(m.get("gmv_pos_lc"), m.get("gmv_pos_plan"), pm.get("gmv_pos_lc")),
+                        "m1": _ratio(pm.get("gmv_lc"), pm.get("orders")),
+                        "ytd": _ratio(ytd.get("gmv_lc"), ytd.get("orders"))},
+        "gmv_pos":     make_kpi(m.get("gmv_pos_lc"), m.get("gmv_pos_plan"), pm.get("gmv_pos_lc")),
     }
     sql_h = f"""
         SELECT month_label, SUM(effective_gmv_total_lc) AS gmv_lc,
@@ -355,14 +370,23 @@ def fetch_company_metrics() -> dict:
         return r.iloc[0].to_dict() if not r.empty else {c: 0 for c in numcols}
     m, pm, yy = row(C.MONTH_LABEL), row(C.PRIOR_MONTH_LABEL), row(C.PRIOR_YEAR_MONTH_LABEL)
 
-    def kpi(col, inverted=False):
-        return {"real": _num(m.get(col)), "m1": _num(pm.get(col)), "mom": _chg(m.get(col), pm.get(col)),
-                "yoy": _num(yy.get(col)), "yoy_pct": _chg(m.get(col), yy.get(col))}
+    def _ytd_sum(col, labels):
+        return float(br[br["month_label"].isin(labels)][col].sum())
+
+    def kpi(col, flow=True, inverted=False):
+        d = {"real": _num(m.get(col)), "m1": _num(pm.get(col)), "mom": _chg(m.get(col), pm.get(col)),
+             "yoy": _num(yy.get(col)), "yoy_pct": _chg(m.get(col), yy.get(col))}
+        if flow:  # stock metrics (merchant_base, EOP) don't accumulate
+            ytd = _ytd_sum(col, C.YTD_MONTH_LABELS)
+            ytdp = _ytd_sum(col, C.PRIOR_YEAR_YTD_MONTH_LABELS)
+            d["ytd"] = ytd
+            d["yoy_ytd_pct"] = _chg(ytd, ytdp)
+        return d
 
     hist = br[br["month_label"].isin(C.HISTORY_MONTH_LABELS)][
         ["month_label"] + numcols].to_dict(orient="records")
     return {
-        "base": {"merchant_base": kpi("merchant_base"), "net_adds": kpi("net_adds"),
+        "base": {"merchant_base": kpi("merchant_base", flow=False), "net_adds": kpi("net_adds"),
                  "first_payments": kpi("first_payments"), "churn_and_downgrade": kpi("churn_and_downgrade")},
         "components": {k: kpi(k) for k in ["first_payments", "new_phoenix", "old_phoenix",
                                            "churns", "downsell_freemium", "ajuste", "net_adds"]},
