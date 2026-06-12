@@ -51,6 +51,7 @@ FONT_TABLE = "Roboto"
 CURRENCY = {"BR": "R$", "AR": "$", "MX": "$"}.get(C.COUNTRY, "$")
 CURRENCY_CODE = {"BR": "BRL", "AR": "ARP", "MX": "MXP"}.get(C.COUNTRY, "LC")
 GMV_TITLE = f"GMV ({CURRENCY_CODE})"
+SUFFIX = f"SMB ({C.COUNTRY})"   # appended to every chart title
 
 # Fonts for matplotlib
 for _ttf in ("Roboto-Regular.ttf", "Roboto-Bold.ttf"):
@@ -264,6 +265,13 @@ def _buf(fig):
     b.seek(0); plt.close(fig)
     return b
 
+def _finish(fig, ax, allow_neg=False):
+    """General rule: Y axis starts at 0 (unless the series has negatives, e.g. Net Adds)."""
+    if not allow_neg:
+        ax.set_ylim(bottom=0)
+    fig.tight_layout()
+    return _buf(fig)
+
 def chart_bars(months, vals, title, ylabel="", color="#2E7D32", pct=False, money=False):
     plt.rcParams["font.family"] = _CHART_FONT
     fig, ax = plt.subplots(figsize=(_FULL_W/2.54, _FULL_H/2.54)); _style(ax)
@@ -278,8 +286,8 @@ def chart_bars(months, vals, title, ylabel="", color="#2E7D32", pct=False, money
     _xaxis(ax, months)
     if pct: ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda v,_: f"{v:.0f}%"))
     else:   ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda v,_: fmt_k(v)))
-    ax.set_title(title, fontsize=_CS, color="#"+C_TEXT, pad=4)
-    fig.tight_layout(); return _buf(fig)
+    ax.set_title(f"{title} — {SUFFIX}", fontsize=_CS, color="#"+C_TEXT, pad=4)
+    return _finish(fig, ax)
 
 def chart_line(months, vals, title, plan=None, pct=False, money=False, fill=False):
     plt.rcParams["font.family"] = _CHART_FONT
@@ -298,8 +306,8 @@ def chart_line(months, vals, title, plan=None, pct=False, money=False, fill=Fals
     _xaxis(ax, months)
     if pct: ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda v,_: f"{v:.0f}%"))
     else:   ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda v,_: fmt_k(v)))
-    ax.set_title(title, fontsize=_CS, color="#"+C_TEXT, pad=4)
-    fig.tight_layout(); return _buf(fig)
+    ax.set_title(f"{title} — {SUFFIX}", fontsize=_CS, color="#"+C_TEXT, pad=4)
+    return _finish(fig, ax)
 
 def chart_netadds(months, vals, title):
     plt.rcParams["font.family"] = _CHART_FONT
@@ -315,8 +323,8 @@ def chart_netadds(months, vals, title):
                     color="#"+(C_GREEN if v >= 0 else C_RED))
     _xaxis(ax, months)
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda v,_: fmt_k(v)))
-    ax.set_title(title, fontsize=_CS, color="#"+C_TEXT, pad=4)
-    fig.tight_layout(); return _buf(fig)
+    ax.set_title(f"{title} — {SUFFIX}", fontsize=_CS, color="#"+C_TEXT, pad=4)
+    return _finish(fig, ax, allow_neg=True)   # Net Adds has negative bars
 
 def chart_stacked(months, series, title, colors):
     plt.rcParams["font.family"] = _CHART_FONT
@@ -327,9 +335,9 @@ def chart_stacked(months, series, title, colors):
         bottom += np.array(vals)
     _xaxis(ax, months)
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda v,_: fmt_k(v)))
-    ax.set_title(title, fontsize=_CS, color="#"+C_TEXT, pad=4)
+    ax.set_title(f"{title} — {SUFFIX}", fontsize=_CS, color="#"+C_TEXT, pad=4)
     ax.legend(loc="upper left", fontsize=_CS-2, frameon=False)
-    fig.tight_layout(); return _buf(fig)
+    return _finish(fig, ax)
 
 def chart_combo(months, bars, lines, title, bar_label, line_labels, line_colors):
     plt.rcParams["font.family"] = _CHART_FONT
@@ -340,9 +348,9 @@ def chart_combo(months, bars, lines, title, bar_label, line_labels, line_colors)
         ax.plot(x, vals, "o-", color=col, linewidth=1.2, markersize=2, label=lab, zorder=4)
     _xaxis(ax, months)
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda v,_: fmt_k(v)))
-    ax.set_title(title, fontsize=_CS, color="#"+C_TEXT, pad=4)
+    ax.set_title(f"{title} — {SUFFIX}", fontsize=_CS, color="#"+C_TEXT, pad=4)
     ax.legend(loc="upper right", fontsize=_CS-2, frameon=False)
-    fig.tight_layout(); return _buf(fig)
+    return _finish(fig, ax)
 
 def add_chart_grid(doc, bufs):
     """Full-width charts, one per row (stacked vertically)."""
@@ -471,9 +479,9 @@ def build_brand(doc, dp, an):
         chart_bars(m, [fv(r["branded_searches"]) for r in sh], "Branded Searches"),
         chart_bars(m, [fv(r["clicks"])/fv(r["branded_searches"],1)*100 if fv(r["branded_searches"]) else 0 for r in sh], "Branded CTR %", color="#81C784", pct=True),
         chart_combo(m, [fv(r["total_market"]) for r in sh],
-                    [[fv(r["branded_kwp"]) for r in sh], [fv(r["nonbranded_kwp"]) for r in sh]],
+                    [[fv(r["total_market"]) - fv(r["nonbranded_kwp"]) for r in sh], [fv(r["nonbranded_kwp"]) for r in sh]],
                     "Total Market", "Total", ["Branded", "Non-Branded"], ["#"+C_BRAND, "#CC3333"]),
-        chart_line(m, [fv(r["branded_kwp"])/fv(r["d2c_kwp"],1)*100 if fv(r["d2c_kwp"]) else 0 for r in sh], "Share of Market", pct=True),
+        chart_line(m, [fv(r["branded_kwp"])/fv(r["d2c_kwp"],1)*100 if fv(r["d2c_kwp"]) else 0 for r in sh], "Market Share", pct=True),
     ])
     # 3.1 table (T1)
     table = doc.add_table(rows=5, cols=8); table.style = "Table Grid"
