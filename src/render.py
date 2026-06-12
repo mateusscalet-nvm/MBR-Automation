@@ -95,6 +95,11 @@ def fmt_signed_pct(v, dec=1):
     if v is None: return "—"
     return f"{fv(v)*100:+.{dec}f}%"
 
+def fmt_pp(v, dec=1):
+    """Percentage-point delta (input is a fraction delta, e.g. -0.016 -> -1.6pp)."""
+    if v is None: return "—"
+    return f"{fv(v)*100:+.{dec}f}pp"
+
 def mom_color(v, inverted=False):
     if v is None: return C_TEXT
     v = fv(v)
@@ -205,6 +210,13 @@ def table_header(table, headers):
         c = table.rows[0].cells[i]
         shade(c, C_BRAND)
         write_cell(c, h, bold=True, color=C_WHITE, size=9)
+    # repeat header row on page breaks
+    trPr = table.rows[0]._tr.get_or_add_trPr()
+    th = OxmlElement("w:tblHeader"); th.set(qn("w:val"), "true"); trPr.append(th)
+    # prevent any single row from splitting across pages
+    for row in table.rows:
+        rp = row._tr.get_or_add_trPr()
+        rp.append(OxmlElement("w:cantSplit"))
 
 
 # ---------------------------------------------------------------------------
@@ -230,6 +242,14 @@ def _xlabels(months):
             out.append(m)
     return out
 
+def _xaxis(ax, months):
+    """Sparse x labels: every 3rd month, always including the last."""
+    n = len(months)
+    idx = sorted(set(list(range(n - 1, -1, -3)) + [n - 1])) if n else []
+    labels = _xlabels(months)
+    ax.set_xticks(idx)
+    ax.set_xticklabels([labels[i] for i in idx], fontsize=_CS - 1, rotation=0)
+
 def _buf(fig):
     b = io.BytesIO()
     fig.savefig(b, format="png", dpi=_DPI, bbox_inches="tight", facecolor="white")
@@ -247,7 +267,7 @@ def chart_bars(months, vals, title, ylabel="", color="#2E7D32", pct=False, money
         v = vals[-1]
         txt = (f"{v:.1f}%" if pct else (fmt_money(v) if money else fmt_k(v)))
         ax.text(x[-1], v, txt, ha="center", va="bottom", fontsize=_CS-1, color="#"+C_TEXT)
-    ax.set_xticks(x); ax.set_xticklabels(_xlabels(months), fontsize=_CS-1)
+    _xaxis(ax, months)
     if pct: ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda v,_: f"{v:.0f}%"))
     else:   ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda v,_: fmt_k(v)))
     ax.set_title(title, fontsize=_CS, color="#"+C_TEXT, pad=4)
@@ -267,7 +287,7 @@ def chart_line(months, vals, title, plan=None, pct=False, money=False, fill=Fals
         txt = (f"{v:.1f}%" if pct else (fmt_money(v) if money else fmt_k(v)))
         ax.annotate(txt, xy=(x[-1], v), xytext=(0,6), textcoords="offset points",
                     ha="center", fontsize=_CS-1, color="#"+C_BRAND)
-    ax.set_xticks(x); ax.set_xticklabels(_xlabels(months), fontsize=_CS-1)
+    _xaxis(ax, months)
     if pct: ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda v,_: f"{v:.0f}%"))
     else:   ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda v,_: fmt_k(v)))
     ax.set_title(title, fontsize=_CS, color="#"+C_TEXT, pad=4)
@@ -280,7 +300,7 @@ def chart_netadds(months, vals, title):
     colors = ["#0CA76B" if v >= 0 else "#CC3333" for v in vals]
     ax.bar(x, vals, 0.7, color=colors, zorder=3)
     ax.axhline(0, color="#"+C_BORDER, linewidth=0.8)
-    ax.set_xticks(x); ax.set_xticklabels(_xlabels(months), fontsize=_CS-1)
+    _xaxis(ax, months)
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda v,_: fmt_k(v)))
     ax.set_title(title, fontsize=_CS, color="#"+C_TEXT, pad=4)
     fig.tight_layout(); return _buf(fig)
@@ -292,7 +312,7 @@ def chart_stacked(months, series, title, colors):
     for (name, vals), col in zip(series.items(), colors):
         ax.bar(x, vals, 0.7, bottom=bottom, color=col, label=name, zorder=3)
         bottom += np.array(vals)
-    ax.set_xticks(x); ax.set_xticklabels(_xlabels(months), fontsize=_CS-1)
+    _xaxis(ax, months)
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda v,_: fmt_k(v)))
     ax.set_title(title, fontsize=_CS, color="#"+C_TEXT, pad=4)
     ax.legend(loc="upper left", fontsize=_CS-2, frameon=False)
@@ -305,7 +325,7 @@ def chart_combo(months, bars, lines, title, bar_label, line_labels, line_colors)
     ax.bar(x, bars, 0.7, color="#B0BEC5", label=bar_label, zorder=2)
     for vals, lab, col in zip(lines, line_labels, line_colors):
         ax.plot(x, vals, "o-", color=col, linewidth=1.2, markersize=2, label=lab, zorder=4)
-    ax.set_xticks(x); ax.set_xticklabels(_xlabels(months), fontsize=_CS-1)
+    _xaxis(ax, months)
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda v,_: fmt_k(v)))
     ax.set_title(title, fontsize=_CS, color="#"+C_TEXT, pad=4)
     ax.legend(loc="upper right", fontsize=_CS-2, frameon=False)
@@ -360,16 +380,31 @@ def build_tldr(doc, an):
     spacer(doc)
 
 
-def _t1_row(table, ri, name, kpi, fmt=fmt_k, inverted=False):
-    """Performance vs Budget row: Metric|Real|Plan|%Achv|M-1|MoM%|YoY%"""
+def write_kpi_row(table, ri, name, kpi, kind="num", fmt=fmt_k, inverted=False):
+    """Row for Metric|Real|Plan|%Achv|M-1|MoM%|YoY%.
+    kind: num | money | ratio | blocked. Ratios show pp for MoM."""
     cells = table.rows[ri].cells
     bg = C_ALT if ri % 2 == 0 else C_WHITE
     for c in cells: shade(c, bg)
     write_cell(cells[0], name, color=C_TEXT, align=WD_ALIGN_PARAGRAPH.LEFT)
+    if kind == "blocked":
+        for ci in range(1, 7): write_cell(cells[ci], "—", color=C_GRAY)
+        return
+    if kind == "ratio":
+        write_cell(cells[1], fmt_pct(kpi.get("real")))
+        write_cell(cells[2], fmt_pct(kpi["plan"]) if kpi.get("plan") else "—")
+        write_cell(cells[3], "—")
+        write_cell(cells[4], fmt_pct(kpi.get("m1")) if kpi.get("m1") is not None else "—")
+        pp = (fv(kpi.get("real")) - fv(kpi.get("m1"))) if kpi.get("m1") is not None else None
+        write_cell(cells[5], fmt_pp(pp) if pp is not None else "—", color=mom_color(pp, inverted))
+        write_cell(cells[6], "—")
+        return
+    # num / money
     write_cell(cells[1], fmt(kpi.get("real")))
     write_cell(cells[2], fmt(kpi["plan"]) if kpi.get("plan") else "—")
-    write_cell(cells[3], fmt_pct(kpi.get("attainment")) if kpi.get("attainment") is not None else "—",
-               color=mom_color((kpi.get("attainment",1)-1) if kpi.get("attainment") is not None else None))
+    att = kpi.get("attainment")
+    write_cell(cells[3], fmt_pct(att) if att is not None else "—",
+               color=mom_color((att - 1) if att is not None else None, inverted))
     write_cell(cells[4], fmt(kpi["m1"]) if kpi.get("m1") is not None else "—")
     mom = kpi.get("mom")
     write_cell(cells[5], fmt_signed_pct(mom) if mom is not None else "—", color=mom_color(mom, inverted))
@@ -381,22 +416,28 @@ def build_main_kpis(doc, dp, an):
     section_title(doc, "2. Main KPIs")
     mac = dp["acquisition"]["macro"]; fin = dp["financial"]["gmv"]; cm = dp["company_metrics"]["base"]
     br = dp["brand"]["macro"]
+    # (name, kpi, kind, fmt, inverted) — DOC_CONSTRUCTION §2.1, top-of-funnel -> financial
     rows = [
-        ("Branded Searches", br["branded_searches"], fmt_k, False),
-        ("Trials", mac["trials"], fmt_k, False),
-        ("New Payments", mac["new_payments"], fmt_k, False),
-        ("New Sellers", mac["new_sellers"], fmt_k, False),
-        ("Net Adds", cm["net_adds"], fmt_int, False),
-        ("Merchant Base", cm["merchant_base"], fmt_k, False),
-        ("GMV (USD)", fin["gmv_usd"], fmt_money, False),
-        ("Orders", fin["orders"], fmt_k, False),
+        ("Branded Searches",   br["branded_searches"],     "num",   fmt_k,     False),
+        ("Sessions",           mac["sessions"],            "num",   fmt_k,     False),
+        ("Trials",             mac["trials"],              "num",   fmt_k,     False),
+        ("CVR Session->Trial", mac["cvr_session_trial"],   "ratio", None,      False),
+        ("New Payments",       mac["new_payments"],        "num",   fmt_k,     False),
+        ("CVR Trial->NP",      mac["cvr_trial_np"],        "ratio", None,      False),
+        ("New Sellers",        mac["new_sellers"],         "num",   fmt_k,     False),
+        ("Net Adds",           cm["net_adds"],             "num",   fmt_int,   False),
+        ("Merchant Base",      cm["merchant_base"],        "num",   fmt_k,     False),
+        ("GMV (local)",        fin["gmv_lc"],              "money", fmt_money, False),
+        ("Orders",             fin["orders"],              "num",   fmt_k,     False),
+        ("% Seller",           {},                         "blocked", None,    False),
+        ("GMV per Seller",     {},                         "blocked", None,    False),
     ]
     table = doc.add_table(rows=len(rows)+1, cols=7); table.style = "Table Grid"
     table_header(table, ["KPI", "Real", "Plan", "%Achv", "M-1", "MoM%", "YoY%"])
-    for i, (name, kpi, fmt, inv) in enumerate(rows, 1):
-        _t1_row(table, i, name, kpi, fmt, inv)
+    for i, (name, kpi, kind, fmt, inv) in enumerate(rows, 1):
+        write_kpi_row(table, i, name, kpi, kind, fmt or fmt_k, inv)
     spacer(doc)
-    # 2x2 charts: Trials, NPs, Net Adds, GMV
+    # 2x2 charts: Trials, NPs, Net Adds, GMV (local)
     fh = dp["acquisition"]["history"]["funnel"]; gh = dp["financial"]["history"]["gmv"]; ch = dp["company_metrics"]["history"]
     m = [r["month_label"] for r in fh]
     add_chart_grid(doc, [
@@ -428,7 +469,7 @@ def build_brand(doc, dp, an):
             ("Total Market", mac["total_market"], fmt_k)]
     table = doc.add_table(rows=5, cols=7); table.style = "Table Grid"
     table_header(table, ["Metric", "Real", "Plan", "%Achv", "M-1", "MoM%", "YoY%"])
-    _t1_row(table, 1, "Branded Searches", mac["branded_searches"], fmt_k)
+    write_kpi_row(table, 1, "Branded Searches", mac["branded_searches"], "num", fmt_k)
     # CTR row (pct, no plan)
     for ri, (nm, kpi) in enumerate([("Branded CTR %", mac["branded_ctr"]),
                                     ("Share of Market", mac["share_of_market"]),
@@ -514,7 +555,7 @@ def build_acquisition(doc, dp, an):
     table = doc.add_table(rows=len(rows)+1, cols=7); table.style = "Table Grid"
     table_header(table, ["KPI", "Real", "Plan", "%Achv", "M-1", "MoM%", "YoY%"])
     for i, (nm, kpi, fmt, inv) in enumerate(rows, 1):
-        _t1_row(table, i, nm, kpi, fmt, inv)
+        write_kpi_row(table, i, nm, kpi, "num", fmt, inv)
     spacer(doc)
     # 4.2 by source (T3) — grouped L4 / L2
     subsection(doc, "4.2 By Source (Branded / Non-Branded)")
